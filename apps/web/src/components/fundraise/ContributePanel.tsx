@@ -84,9 +84,11 @@ export function ContributePanel({
     }
   }, [usdcBalance]);
 
-  if (isSuccess) {
-    onSuccess?.();
-  }
+  useEffect(() => {
+    if (isSuccess) {
+      onSuccess?.();
+    }
+  }, [isSuccess, onSuccess]);
 
   const isProcessing =
     isPending || isConfirming || isApprovePending || isApproveConfirming;

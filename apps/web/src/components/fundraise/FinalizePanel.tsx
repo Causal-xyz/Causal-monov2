@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Loader2, Shield } from "lucide-react";
@@ -55,14 +55,16 @@ export function FinalizePanel({
     error: forceError,
   } = useForceFinalize();
 
-  if (isFinalizeSuccess || isForceSuccess) {
-    onSuccess?.();
-  }
-
   const isFounder =
     address?.toLowerCase() === founder?.toLowerCase();
   const isExpired = saleEnd > 0 && Date.now() / 1000 > saleEnd;
   const goalReached = usdcRaised >= fundingGoal;
+
+  useEffect(() => {
+    if (isFinalizeSuccess || isForceSuccess) {
+      onSuccess?.();
+    }
+  }, [isFinalizeSuccess, isForceSuccess, onSuccess]);
 
   if (finalized || !isFounder) return null;
 
@@ -93,7 +95,16 @@ export function FinalizePanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {goalReached && (
+        {goalReached && !isExpired && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Funding goal reached! Finalization will be available once the
+              sale period ends.
+            </p>
+          </div>
+        )}
+
+        {goalReached && isExpired && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Funding goal reached! You can finalize the raise and deploy

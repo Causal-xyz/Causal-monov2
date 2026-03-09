@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Loader2, Check } from "lucide-react";
@@ -39,9 +40,11 @@ export function ClaimPanel({
   const { claim, isPending, isConfirming, isSuccess, error } =
     useFundraiseClaim();
 
-  if (isSuccess) {
-    onSuccess?.();
-  }
+  useEffect(() => {
+    if (isSuccess) {
+      onSuccess?.();
+    }
+  }, [isSuccess, onSuccess]);
 
   const hasContributed = committed > 0n;
 
