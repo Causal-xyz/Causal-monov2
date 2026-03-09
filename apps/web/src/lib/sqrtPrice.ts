@@ -11,22 +11,26 @@ const PRECISION = 10n ** 18n;
 /**
  * Convert a human-readable price to sqrtPriceX96.
  *
- * @param price - Human-readable price of token0 in terms of token1 (e.g. 1.0 means 1 token0 = 1 token1)
- * @param decimalsToken0 - Decimals of token0
- * @param decimalsToken1 - Decimals of token1
+ * In Uniswap V3, price = token1_smallest / token0_smallest.
+ * If "1 token0 = humanPrice token1" in human terms, then:
+ *   price_smallest = humanPrice * 10^(decimalsToken1 - decimalsToken0)
+ *
+ * @param humanPrice - Human-readable price: 1 token0 = humanPrice token1
+ * @param decimalsToken0 - Decimals of token0 (the lower-address token)
+ * @param decimalsToken1 - Decimals of token1 (the higher-address token)
  * @returns sqrtPriceX96 as bigint
  */
 export function priceToSqrtPriceX96(
-  price: number,
+  humanPrice: number,
   decimalsToken0: number,
   decimalsToken1: number,
 ): bigint {
-  // price in smallest units: price * 10^(decimalsToken0) / 10^(decimalsToken1)
-  // sqrtPriceX96 = sqrt(adjustedPrice) * 2^96
-  const decimalAdjustment = 10 ** (decimalsToken0 - decimalsToken1);
-  const adjustedPrice = price * decimalAdjustment;
+  // Convert human price to smallest-unit price:
+  // price_smallest = humanPrice * 10^(decimalsToken1 - decimalsToken0)
+  const decimalAdjustment = 10 ** (decimalsToken1 - decimalsToken0);
+  const adjustedPrice = humanPrice * decimalAdjustment;
 
-  // Use floating-point sqrt then convert to bigint with Q96
+  // sqrtPriceX96 = sqrt(adjustedPrice) * 2^96
   const sqrtPrice = Math.sqrt(adjustedPrice);
 
   // Scale by 2^96 — use PRECISION intermediary for better accuracy
@@ -37,9 +41,9 @@ export function priceToSqrtPriceX96(
 /**
  * Compute sqrtPriceX96 for a token pair, automatically handling token0/token1 ordering.
  *
- * @param tokenA - Address of the first token
+ * @param tokenA - Address of the first token (e.g. yesX conditional token)
  * @param decimalsA - Decimals of tokenA
- * @param tokenB - Address of the second token
+ * @param tokenB - Address of the second token (e.g. USDC)
  * @param decimalsB - Decimals of tokenB
  * @param priceAPerB - How many tokenA per 1 tokenB (e.g. 1.0 = 1:1)
  * @returns sqrtPriceX96 as bigint
@@ -55,12 +59,13 @@ export function computeSqrtPriceX96ForPair(
 
   if (aIsToken0) {
     // token0 = A, token1 = B
-    // sqrtPriceX96 represents price = token1/token0 = B/A = 1/priceAPerB
+    // Uniswap price = token1/token0 = B/A
+    // "priceAPerB" means 1 B costs priceAPerB A, so B/A = 1/priceAPerB
     const price = 1 / priceAPerB;
     return priceToSqrtPriceX96(price, decimalsA, decimalsB);
   }
 
   // token0 = B, token1 = A
-  // sqrtPriceX96 represents price = token1/token0 = A/B = priceAPerB
+  // Uniswap price = token1/token0 = A/B = priceAPerB
   return priceToSqrtPriceX96(priceAPerB, decimalsB, decimalsA);
 }

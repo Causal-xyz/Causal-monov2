@@ -2,10 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { parseUnits } from "viem";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContracts } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CONTRACTS, FEE_TIERS } from "@causal/shared";
+import { futarchyProposalAbi } from "@causal/shared";
 import { useSetupAmm } from "@/hooks/useSetupAmm";
 import { useApprovalFlow } from "@/hooks/useApprovalFlow";
 import { useTokenBalance } from "@/hooks/useTokenBalance";
@@ -44,6 +45,16 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
     initialNoPrice: "1.0",
   });
 
+  // Read yesX and noX addresses from the proposal contract for correct sqrtPriceX96 ordering
+  const { data: tokenAddresses } = useReadContracts({
+    contracts: [
+      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "yesX" },
+      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "noX" },
+    ],
+  });
+  const yesXAddress = tokenAddresses?.[0]?.result as `0x${string}` | undefined;
+  const noXAddress = tokenAddresses?.[1]?.result as `0x${string}` | undefined;
+
   const { balance: tokenXBalance, decimals: tokenXDecimals, symbol: tokenXSymbol } =
     useTokenBalance(tokenX, address);
   const { balance: usdcBalance, decimals: usdcDecimals, symbol: usdcSymbol } =
@@ -78,14 +89,18 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
   );
 
   function handleSetup() {
+    if (!yesXAddress || !noXAddress) return;
+
     const yesPrice = parseFloat(form.initialYesPrice) || 1.0;
     const noPrice = parseFloat(form.initialNoPrice) || 1.0;
 
+    // Use actual conditional token addresses for correct Uniswap pool ordering
+    // yesX/noX have the same decimals as tokenX
     const sqrtPriceYes = computeSqrtPriceX96ForPair(
-      tokenX, tokenXDecimals, usdc, usdcDecimals, yesPrice,
+      yesXAddress, tokenXDecimals, usdc, usdcDecimals, yesPrice,
     );
     const sqrtPriceNo = computeSqrtPriceX96ForPair(
-      tokenX, tokenXDecimals, usdc, usdcDecimals, noPrice,
+      noXAddress, tokenXDecimals, usdc, usdcDecimals, noPrice,
     );
 
     setupAmm({
@@ -103,6 +118,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
   const needsUsdcApproval = usdcApproval.needsApproval && usdcSeedParsed > 0n;
   const approvingTokenX = tokenXApproval.isApprovePending || tokenXApproval.isApproveConfirming;
   const approvingUsdc = usdcApproval.isApprovePending || usdcApproval.isApproveConfirming;
+  const tokensLoaded = !!yesXAddress && !!noXAddress;
 
   if (isSuccess) {
     return (
@@ -256,7 +272,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
         ) : (
           <Button
             type="button"
-            disabled={!address || isPending || isConfirming || tokenXSeedParsed === 0n || usdcSeedParsed === 0n}
+            disabled={!address || !tokensLoaded || isPending || isConfirming || tokenXSeedParsed === 0n || usdcSeedParsed === 0n}
             onClick={handleSetup}
             className="btn-glow w-full border-0 py-3 text-primary-foreground"
           >

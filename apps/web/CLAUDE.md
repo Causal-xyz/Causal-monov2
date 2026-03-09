@@ -61,9 +61,9 @@ src/
     useResolve.ts            → resolve() transaction hook
     useRedeem.ts             → redeemWinningX / redeemWinningUsdc hooks
     useAllProposals.ts       → Fetch all proposals from factory
-    useCreateProposal.ts     → Create proposal via factory (without AMM)
-    useCreateProposalWithAmm.ts → Create proposal + AMM pools in one tx via factory
-    useSetupAmm.ts           → Setup AMM pools on existing proposal (setupAmmWithLiquidity)
+    useCreateProposal.ts     → Create proposal via factory (step 1 of 2)
+    useSetupAmm.ts           → Setup AMM pools on existing proposal (step 2 of 2)
+    useLatestProposalAddress.ts → Read latest proposal address from factory after creation
     useCountdown.ts          → Live countdown timer
   lib/
     utils.ts                 → cn() helper (clsx + tailwind-merge)

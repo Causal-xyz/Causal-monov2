@@ -34,7 +34,7 @@ apps/
         ConnectWallet, StatusBadge, TransactionButton, TokenAmount, ThemeProvider
       hooks/
         Fundraise:  → useAllFundraises, useFundraiseInfo, useUserContribution, useCreateOrganization, useCommit, useFinalize, useFundraiseClaim
-        Proposals:  → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useCreateProposalWithAmm, useSetupAmm, useTokenBalance, useCountdown
+        Proposals:  → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useSetupAmm, useLatestProposalAddress, useTokenBalance, useCountdown
       lib/          → utils.ts, wagmi.ts, sqrtPrice.ts
       providers.tsx → WagmiProvider + QueryClient + ThemeProvider
   api/          → Fastify backend (port 3001)

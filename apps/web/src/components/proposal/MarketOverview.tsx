@@ -3,7 +3,7 @@
 import { useAccount } from "wagmi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupAmmPanel } from "@/components/proposal/SetupAmmPanel";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
 
 interface MarketOverviewProps {
   readonly proposal: {
@@ -26,12 +26,26 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
   if (!proposal.hasAmms) {
     if (isOwner) {
       return (
-        <SetupAmmPanel
-          proposalAddress={proposal.address}
-          tokenX={proposal.tokenX}
-          usdc={proposal.usdc}
-          onSuccess={onRefetch}
-        />
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-lg border border-causal/30 bg-causal/5 p-4">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-causal" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Step 2: Set up AMM pools
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Your proposal is deployed. Set up Uniswap V3 pools below so trading
+                can begin on the YES and NO conditional tokens.
+              </p>
+            </div>
+          </div>
+          <SetupAmmPanel
+            proposalAddress={proposal.address}
+            tokenX={proposal.tokenX}
+            usdc={proposal.usdc}
+            onSuccess={onRefetch}
+          />
+        </div>
       );
     }
 

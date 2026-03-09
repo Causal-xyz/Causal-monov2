@@ -33,6 +33,7 @@ export function useSetupAmm(proposalAddress: `0x${string}`) {
         params.tokenXAmount,
         params.usdcAmount,
       ],
+      gas: 12_000_000n,
     });
   }
 

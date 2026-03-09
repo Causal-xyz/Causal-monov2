@@ -36,6 +36,7 @@ export function useCreateProposal(factoryAddress: `0x${string}`) {
         params.tokensToMint ?? 0n,
         params.twapWindow ?? 3600,
       ],
+      gas: 6_000_000n,
     });
   }
 
