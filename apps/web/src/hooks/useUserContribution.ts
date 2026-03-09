@@ -41,7 +41,7 @@ export function useUserContribution(
       enabled:
         !!contractAddress &&
         contractAddress !== "0x" &&
-        orgId > 0 &&
+        orgId >= 0 &&
         !!userAddress,
       refetchInterval: 10_000,
     },

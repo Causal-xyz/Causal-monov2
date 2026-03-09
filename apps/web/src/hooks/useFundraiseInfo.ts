@@ -60,7 +60,7 @@ export function useFundraiseInfo(orgId: number) {
       },
     ],
     query: {
-      enabled: !!contractAddress && contractAddress !== "0x" && orgId > 0,
+      enabled: !!contractAddress && contractAddress !== "0x" && orgId >= 0,
       refetchInterval: 10_000,
     },
   });

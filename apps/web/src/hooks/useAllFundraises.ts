@@ -17,7 +17,7 @@ export function useAllFundraises() {
 
   // Batch read info + sale data for all orgs
   const batchContracts = Array.from({ length: count }, (_, i) => {
-    const orgId = BigInt(i + 1);
+    const orgId = BigInt(i);
     return [
       {
         address: contractAddress,
@@ -63,7 +63,7 @@ export function useAllFundraises() {
     }
 
     return {
-      id: i + 1,
+      id: i,
       name: infoResult?.[0] ?? "",
       symbol: infoResult?.[1] ?? "",
       description: infoResult?.[2] ?? "",
