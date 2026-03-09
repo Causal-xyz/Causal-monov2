@@ -2,8 +2,9 @@
 
 import { type ReactNode } from "react";
 import { useWaitForTransactionReceipt } from "wagmi";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { useNetworkGuard } from "@/hooks/useNetworkGuard";
 
 type TxStatus = "idle" | "pending" | "confirming" | "success" | "error";
 
@@ -29,9 +30,34 @@ export function TransactionButton({
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
+  const { isWrongNetwork, isSwitching, switchToFuji, expectedChainName } =
+    useNetworkGuard();
 
   if (isSuccess && onSuccess) {
     onSuccess();
+  }
+
+  if (isWrongNetwork) {
+    return (
+      <Button
+        onClick={switchToFuji}
+        disabled={isSwitching}
+        variant="destructive"
+        className={className}
+      >
+        {isSwitching ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Switching...
+          </>
+        ) : (
+          <>
+            <AlertTriangle className="mr-2 h-4 w-4" />
+            Switch to {expectedChainName}
+          </>
+        )}
+      </Button>
+    );
   }
 
   const status: TxStatus = isPending

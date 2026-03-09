@@ -4,11 +4,13 @@ import Link from "next/link";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { FaucetButton } from "@/components/FaucetButton";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/fundraises", label: "Fundraises" },
   { href: "/proposals", label: "Proposals" },
+  { href: "/faucet", label: "Faucet" },
 ] as const;
 
 export function Header() {
@@ -36,6 +38,8 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
+          <FaucetButton />
+
           <button
             onClick={toggleTheme}
             className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-foreground"
