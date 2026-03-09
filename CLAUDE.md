@@ -1,6 +1,6 @@
 # Causal Trading — Monorepo
 
-Futarchy-based prediction market where proposal outcomes are determined by Uniswap V3 TWAP prices.
+Fundraise-to-governance platform: raise USDC via time-weighted token sales, then govern with futarchy — where Uniswap V3 TWAP prices decide proposal outcomes.
 
 ## Tech Stack
 
@@ -18,13 +18,23 @@ Futarchy-based prediction market where proposal outcomes are determined by Unisw
 apps/
   web/          → Next.js frontend (port 3000)
     src/
-      app/          → Pages (/, /proposals, /proposals/create, /proposals/[address])
+      app/
+        /                          → Landing page
+        /fundraises                → List all fundraises
+        /fundraises/create         → Create new fundraise
+        /fundraises/[id]           → Fundraise detail (contribute, claim, finalize)
+        /proposals                 → List all proposals
+        /proposals/create          → Create proposal
+        /proposals/[address]       → Proposal detail (split, merge, resolve, redeem)
       components/
         layout/     → Header, Footer
+        fundraise/  → FundraiseProgress, FundraiseStatusBadge, ContributePanel, ClaimPanel, FinalizePanel
         proposal/   → ProposalHeader, SplitMergePanel, MarketOverview, PortfolioPanel, ResolutionPanel, RedemptionPanel
         ui/         → shadcn/ui components (Button, Card, Badge)
         ConnectWallet, StatusBadge, TransactionButton, TokenAmount, ThemeProvider
-      hooks/        → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useTokenBalance, useCountdown
+      hooks/
+        Fundraise:  → useAllFundraises, useFundraiseInfo, useUserContribution, useCreateOrganization, useCommit, useFinalize, useFundraiseClaim
+        Proposals:  → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useTokenBalance, useCountdown
       lib/          → utils.ts, wagmi.ts
       providers.tsx → WagmiProvider + QueryClient + ThemeProvider
   api/          → Fastify backend (port 3001)
@@ -35,19 +45,23 @@ apps/
       plugins/      → cors.ts
   contracts/    → Foundry smart contracts
     src/
-      futarchy.sol   → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
-      MockTokenX.sol → Test ERC20 (CTK, 18 decimals, public mint + faucet)
-      MockUSDC.sol   → Test USDC (mUSDC, 6 decimals, public mint + faucet)
+      CausalOrganizations.sol → Singleton: fundraise creation, commit, finalize, claim
+      OrgToken.sol            → ERC20 governance token with controlled minting
+      Treasury.sol            → Per-org treasury holding USDC, authorizes proposals
+      futarchy.sol            → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
+      MockTokenX.sol          → Test ERC20 (CTK, 18 decimals, public mint + faucet)
+      MockUSDC.sol            → Test USDC (mUSDC, 6 decimals, public mint + faucet)
     script/
-      Deploy.s.sol   → Deployment script for Fuji
+      Deploy.s.sol            → Deploys MockTokenX, MockUSDC, CausalOrganizations
     test/
-      Futarchy.t.sol → Test suite
+      CausalOrganizations.t.sol → 23 tests (create, commit, finalize, claim, lifecycle)
+      Futarchy.t.sol            → 5 tests (proposal, resolve yes/no, edge cases)
 packages/
   shared/             → Types, constants, ABIs
     src/
-      types.ts        → Proposal, Outcome, ConditionalBalances, etc.
+      types.ts        → Proposal, Outcome, Organization, OrgInfo, OrgSale, UserContribution, etc.
       constants.ts    → Chain config, contract addresses (from env vars), fee tiers
-      abi/            → futarchyFactory, futarchyProposal, erc20 ABI arrays
+      abi/            → causalOrganizations, treasury, orgToken, futarchyFactory, futarchyProposal, erc20
   typescript-config/  → Shared tsconfig bases (base, nextjs, node)
   eslint-config/      → Shared ESLint config
 docs/                 → Project documentation
@@ -84,6 +98,7 @@ Each app has a `.env.example` — copy to `.env.local` (web/api) or `.env` (cont
 | `NEXT_PUBLIC_UNISWAP_V3_FACTORY` | Yes | — | Uniswap V3 Factory address on Fuji |
 | `NEXT_PUBLIC_POSITION_MANAGER` | Yes | — | Uniswap V3 NonfungiblePositionManager |
 | `NEXT_PUBLIC_SWAP_ROUTER` | Yes | — | Uniswap V3 SwapRouter address |
+| `NEXT_PUBLIC_CAUSAL_ORGANIZATIONS_ADDRESS` | Yes | — | CausalOrganizations deployed address |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | — | WalletConnect project ID (optional) |
 
 ### apps/api

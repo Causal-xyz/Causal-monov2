@@ -15,9 +15,18 @@ export const futarchyFactoryAbi = [
       { name: "transferToken", type: "address" },
       { name: "recipient", type: "address" },
       { name: "transferAmount", type: "uint256" },
+      { name: "usdcRequested", type: "uint256" },
+      { name: "tokensToMint", type: "uint256" },
     ],
     outputs: [{ name: "", type: "address" }],
     stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "treasury",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
   },
   {
     type: "function",

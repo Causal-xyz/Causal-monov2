@@ -15,6 +15,8 @@ export function useCreateProposal() {
     transferToken: `0x${string}`;
     recipient: `0x${string}`;
     transferAmount: bigint;
+    usdcRequested?: bigint;
+    tokensToMint?: bigint;
   }) {
     writeContract({
       address: CONTRACTS.factory,
@@ -28,6 +30,8 @@ export function useCreateProposal() {
         params.transferToken,
         params.recipient,
         params.transferAmount,
+        params.usdcRequested ?? 0n,
+        params.tokensToMint ?? 0n,
       ],
     });
   }

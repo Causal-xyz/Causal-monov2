@@ -9,6 +9,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
+interface ITreasury {
+    function authorizeProposal(address proposal) external;
+    function spendFunds(address recipient, uint256 amount) external;
+    function mintTokens(address recipient, uint256 amount) external;
+}
+
 interface IOracle {
     function observe(uint32[] calldata secondsAgos)
         external
@@ -135,6 +141,11 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
     address public immutable recipient;
     uint256 public immutable transferAmount;
 
+    // Treasury integration (optional — address(0) for standalone mode)
+    ITreasury public immutable treasury;
+    uint256 public immutable usdcRequested;
+    uint256 public immutable tokensToMint;
+
     ConditionalToken public immutable yesX;
     ConditionalToken public immutable noX;
     ConditionalToken public immutable yesUsdc;
@@ -170,7 +181,10 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         uint256 resolutionTimestamp_,
         address transferToken_,
         address recipient_,
-        uint256 transferAmount_
+        uint256 transferAmount_,
+        address treasury_,
+        uint256 usdcRequested_,
+        uint256 tokensToMint_
     ) Ownable(owner_) {
         require(tokenX_ != address(0), "tokenX=0");
         require(usdc_ != address(0), "usdc=0");
@@ -185,6 +199,9 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         transferToken = IERC20(transferToken_);
         recipient = recipient_;
         transferAmount = transferAmount_;
+        treasury = ITreasury(treasury_);
+        usdcRequested = usdcRequested_;
+        tokensToMint = tokensToMint_;
 
         string memory pid = Strings.toString(proposalId_);
         string memory xSymbol = IERC20Metadata(tokenX_).symbol();
@@ -372,7 +389,18 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         emit Resolved(proposalId, outcome);
 
         if (outcome == Outcome.Yes) {
-            transferToken.safeTransfer(recipient, transferAmount);
+            if (address(treasury) != address(0)) {
+                // Treasury mode: spend USDC and/or mint tokens via treasury
+                if (usdcRequested > 0) {
+                    treasury.spendFunds(recipient, usdcRequested);
+                }
+                if (tokensToMint > 0) {
+                    treasury.mintTokens(recipient, tokensToMint);
+                }
+            } else {
+                // Standalone mode: direct transfer (backwards compatible)
+                transferToken.safeTransfer(recipient, transferAmount);
+            }
             emit Executed(proposalId, recipient, address(transferToken), transferAmount);
         }
     }
@@ -453,8 +481,23 @@ contract FutarchyFactoryPoc is Ownable {
     uint256 public proposalCount;
     mapping(uint256 => address) public proposals;
 
-    constructor(address owner_) Ownable(owner_) {}
+    /// @notice Treasury address for this factory. address(0) for standalone mode.
+    ITreasury public immutable treasury;
 
+    constructor(address owner_, address treasury_) Ownable(owner_) {
+        treasury = ITreasury(treasury_);
+    }
+
+    /// @notice Create a new futarchy proposal with treasury integration.
+    /// @param title Proposal title
+    /// @param tokenX Governance token (OrgToken) address
+    /// @param usdc USDC address
+    /// @param resolutionTimestamp When the proposal can be resolved
+    /// @param transferToken Token to transfer on YES (used in standalone mode)
+    /// @param recipient Who receives funds/tokens on YES outcome
+    /// @param transferAmount Amount to transfer on YES (standalone mode)
+    /// @param usdcRequested USDC to spend from treasury on YES (treasury mode)
+    /// @param tokensToMint Governance tokens to mint via treasury on YES (treasury mode)
     function createProposal(
         string memory title,
         address tokenX,
@@ -462,7 +505,9 @@ contract FutarchyFactoryPoc is Ownable {
         uint256 resolutionTimestamp,
         address transferToken,
         address recipient,
-        uint256 transferAmount
+        uint256 transferAmount,
+        uint256 usdcRequested,
+        uint256 tokensToMint
     ) external onlyOwner returns (address) {
         proposalCount++;
         FutarchyProposalPoc proposal = new FutarchyProposalPoc(
@@ -474,9 +519,18 @@ contract FutarchyFactoryPoc is Ownable {
             resolutionTimestamp,
             transferToken,
             recipient,
-            transferAmount
+            transferAmount,
+            address(treasury),
+            usdcRequested,
+            tokensToMint
         );
         proposals[proposalCount] = address(proposal);
+
+        // Authorize the proposal in the treasury (if treasury mode)
+        if (address(treasury) != address(0)) {
+            treasury.authorizeProposal(address(proposal));
+        }
+
         return address(proposal);
     }
 }

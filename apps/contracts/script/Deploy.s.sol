@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {MockTokenX} from "../src/MockTokenX.sol";
 import {MockUSDC} from "../src/MockUSDC.sol";
-import {FutarchyFactoryPoc} from "../src/futarchy.sol";
+import {CausalOrganizations} from "../src/CausalOrganizations.sol";
 
 /// @title Deploy — Deploy all Causal contracts to Avalanche Fuji
 /// @notice Usage: forge script script/Deploy.s.sol --rpc-url fuji --broadcast
@@ -22,9 +22,9 @@ contract Deploy is Script {
         MockUSDC usdc = new MockUSDC();
         console.log("MockUSDC deployed:", address(usdc));
 
-        // 2. Deploy factory
-        FutarchyFactoryPoc factory = new FutarchyFactoryPoc(deployer);
-        console.log("FutarchyFactoryPoc deployed:", address(factory));
+        // 2. Deploy CausalOrganizations singleton
+        CausalOrganizations causal = new CausalOrganizations(address(usdc));
+        console.log("CausalOrganizations deployed:", address(causal));
 
         // 3. Mint initial test tokens to deployer
         tokenX.faucet();
@@ -35,9 +35,9 @@ contract Deploy is Script {
 
         // Log summary
         console.log("------- DEPLOYMENT SUMMARY -------");
-        console.log("MockTokenX:         ", address(tokenX));
-        console.log("MockUSDC:           ", address(usdc));
-        console.log("FutarchyFactoryPoc: ", address(factory));
-        console.log("Deployer:           ", deployer);
+        console.log("MockTokenX:           ", address(tokenX));
+        console.log("MockUSDC:             ", address(usdc));
+        console.log("CausalOrganizations:  ", address(causal));
+        console.log("Deployer:             ", deployer);
     }
 }

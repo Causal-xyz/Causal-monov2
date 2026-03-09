@@ -130,7 +130,7 @@ contract FutarchyTest is Test {
         vm.startPrank(owner);
         tokenX = new MockERC20("Token X", "TX");
         usdc = new MockERC20("USD Coin", "USDC");
-        factory = new FutarchyFactoryPoc(owner);
+        factory = new FutarchyFactoryPoc(owner, address(0));
 
         mockFactoryV3 = new MockUniswapV3Factory(owner);
         mockFactoryV3.enableFeeAmount(FEE, TICK_SPACING);
@@ -148,7 +148,7 @@ contract FutarchyTest is Test {
     function test_CreateProposal() public {
         vm.startPrank(owner);
         uint256 resolutionTs = block.timestamp + 2 days;
-        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT);
+        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT, 0, 0);
         proposal = FutarchyProposalPoc(proposalAddr);
 
         // Split tokenX to get yesX and noX into the proposal
@@ -184,7 +184,7 @@ contract FutarchyTest is Test {
     function test_ResolveYesWins() public {
         vm.startPrank(owner);
         uint256 resolutionTs = block.timestamp + 2 days;
-        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT);
+        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT, 0, 0);
         proposal = FutarchyProposalPoc(proposalAddr);
 
         // Split tokenX to get yesX and noX into the proposal
@@ -227,7 +227,7 @@ contract FutarchyTest is Test {
     function test_ResolveNoWins() public {
         vm.startPrank(owner);
         uint256 resolutionTs = block.timestamp + 2 days;
-        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT);
+        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT, 0, 0);
         proposal = FutarchyProposalPoc(proposalAddr);
 
         // Split tokenX to get yesX and noX into the proposal
@@ -270,7 +270,7 @@ contract FutarchyTest is Test {
     function test_FailResolveBeforeTimestamp() public {
         vm.startPrank(owner);
         uint256 resolutionTs = block.timestamp + 2 days;
-        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT);
+        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT, 0, 0);
         proposal = FutarchyProposalPoc(proposalAddr);
 
         // Split tokenX to get yesX and noX into the proposal
@@ -305,7 +305,7 @@ contract FutarchyTest is Test {
     function test_FailResolveTwice() public {
         vm.startPrank(owner);
         uint256 resolutionTs = block.timestamp + 2 days;
-        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT);
+        address proposalAddr = factory.createProposal("Test Proposal", address(tokenX), address(usdc), resolutionTs, address(usdc), paymentTarget, TRANSFER_AMOUNT, 0, 0);
         proposal = FutarchyProposalPoc(proposalAddr);
 
         // Split tokenX to get yesX and noX into the proposal

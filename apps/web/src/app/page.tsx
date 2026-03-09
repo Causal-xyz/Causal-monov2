@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, Scale, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, Scale, Zap, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const VALUE_PROPS = [
+  {
+    icon: Rocket,
+    title: "Fundraise & Launch",
+    description: "Create a project, raise USDC from investors with time-weighted allocation, and auto-deploy governance.",
+  },
   {
     icon: Scale,
     title: "Futarchy Governance",
@@ -22,11 +27,12 @@ const VALUE_PROPS = [
 ] as const;
 
 const STEPS = [
-  { num: "01", title: "Create Proposal", description: "Define the governance action and set a resolution deadline" },
-  { num: "02", title: "Split Tokens", description: "Split base tokens into YES/NO conditional pairs" },
-  { num: "03", title: "Trade", description: "Buy/sell conditional tokens on Uniswap V3 pools" },
-  { num: "04", title: "Resolve", description: "TWAP oracle compares YES vs NO prices after deadline" },
-  { num: "05", title: "Redeem", description: "Winners redeem conditional tokens for the underlying asset" },
+  { num: "01", title: "Create Fundraise", description: "Define your project and raise USDC from investors" },
+  { num: "02", title: "Investors Contribute", description: "Early contributors get higher time-weighted allocation" },
+  { num: "03", title: "Finalize & Deploy", description: "Once funded, governance token + treasury + proposal factory are auto-deployed" },
+  { num: "04", title: "Claim Tokens", description: "Investors redeem governance tokens proportional to their contribution" },
+  { num: "05", title: "Create Proposals", description: "Token holders create futarchy proposals to spend treasury funds" },
+  { num: "06", title: "Trade & Resolve", description: "Market decides: TWAP oracle compares YES vs NO prices after deadline" },
 ] as const;
 
 export default function HomePage() {
@@ -39,19 +45,19 @@ export default function HomePage() {
           <span className="gradient-text">Govern with Markets</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-          Causal Trading is a futarchy-based prediction market where proposal
-          outcomes are determined by market prices, not votes.
+          Causal Trading lets you launch projects, raise funds, and govern with
+          futarchy — where market prices decide proposal outcomes, not votes.
         </p>
         <div className="mt-10 flex gap-4">
-          <Link href="/proposals">
+          <Link href="/fundraises">
             <Button className="btn-glow border-0 px-6 py-3 text-primary-foreground">
-              View Proposals
+              Browse Fundraises
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/proposals/create">
+          <Link href="/fundraises/create">
             <Button variant="outline" className="px-6 py-3">
-              Create Proposal
+              Launch a Project
             </Button>
           </Link>
         </div>

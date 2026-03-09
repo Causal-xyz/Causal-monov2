@@ -2,47 +2,64 @@
 
 ## Overview
 
-Futarchy POC — a prediction market where proposal outcomes are determined by the relative market prices of conditional tokens traded on Uniswap V3.
+Fundraise-to-governance platform: CausalOrganizations manages time-weighted token sales; on successful fundraise, it auto-deploys OrgToken + Treasury + FutarchyFactory. Futarchy proposals use Uniswap V3 TWAP to decide outcomes.
 
 ## Key Paths
 
 ```
 src/
-  futarchy.sol      → Core contracts (ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc)
-  MockTokenX.sol    → Test ERC20 governance token (CTK, 18 decimals, public mint + faucet)
-  MockUSDC.sol      → Test stablecoin (mUSDC, 6 decimals, public mint + faucet)
+  CausalOrganizations.sol → Singleton: create org, commit USDC, finalize, claim tokens
+  OrgToken.sol            → ERC20 governance token with controlled minting (minter role)
+  Treasury.sol            → Per-org treasury: holds USDC, authorizes proposals, spendFunds/mintTokens
+  futarchy.sol            → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
+  MockTokenX.sol          → Test ERC20 governance token (CTK, 18 decimals, public mint + faucet)
+  MockUSDC.sol            → Test stablecoin (mUSDC, 6 decimals, public mint + faucet)
 test/
-  Futarchy.t.sol    → Test suite with mock contracts
+  CausalOrganizations.t.sol → 23 tests (org creation, commit, finalize, claim, full lifecycle)
+  Futarchy.t.sol            → 5 tests (proposal, resolve yes/no, edge cases)
 script/
-  Deploy.s.sol      → Deployment script for Avalanche Fuji
-lib/                → Dependencies (forge-std, OpenZeppelin, Uniswap V3)
+  Deploy.s.sol              → Deploys MockTokenX, MockUSDC, CausalOrganizations
+lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V3)
 ```
 
 ## Contracts
+
+### CausalOrganizations (singleton)
+- `createOrganization()` — creates a fundraise with name, symbol, description, token economics, sale duration, alpha
+- `commit()` — investors send USDC with time-weighted accumulator
+- `finalizeRaise()` — founder finalizes, auto-deploys OrgToken + Treasury + FutarchyFactoryPoc
+- `forceFinalize()` — force-fail if goal not reached after sale ends
+- `claim()` — investors redeem tokens + refund based on `alpha × (acc/totalAcc) + (1-alpha) × (committed/totalCommitted)`
+
+### OrgToken
+- ERC20 with `minter` role (initially CausalOrganizations, then transferred to Treasury)
+- `mint()`, `lockMinting()`, `transferMinter()` — all onlyMinter
+
+### Treasury
+- Per-org treasury holding raised USDC
+- `initialize()` — one-time setup with projectToken + proposalFactory
+- `authorizeProposal()` — called by factory when creating proposals
+- `spendFunds()` / `mintTokens()` — called by authorized proposals on YES outcome
 
 ### ConditionalToken
 - ERC20 extension for conditional outcome tokens
 - Manager-gated minting/burning
 
-### FutarchyProposalPoc (main contract)
+### FutarchyProposalPoc
 - Creates 4 conditional tokens: yesX, noX, yesUsdc, noUsdc
 - `splitX()` / `splitUsdc()` — split base tokens into yes/no pairs
 - `mergeX()` / `mergeUsdc()` — merge pairs back to base
 - `createAndSetAmms()` — creates Uniswap V3 pools with full-range liquidity
-- `resolve()` — resolves proposal using 1-hour TWAP comparison
-- `redeemWinningX()` / `redeemWinningUsdc()` — winners claim underlying
+- `resolve()` — resolves via 1-hour TWAP; on YES, calls `treasury.spendFunds()` / `treasury.mintTokens()`
+- Supports both treasury mode and standalone mode (`address(0)` treasury)
 
 ### FutarchyFactoryPoc
 - Factory for creating proposals (Ownable)
+- Auto-calls `treasury.authorizeProposal()` on creation
 - Maintains on-chain proposal registry (`proposals[id]`)
 
-### MockTokenX
-- Simple ERC20 with public `mint()` and `faucet()` (10,000 CTK per call)
-- 18 decimals
-
-### MockUSDC
-- Simple ERC20 with public `mint()` and `faucet()` (10,000 mUSDC per call)
-- 6 decimals (matches real USDC)
+### MockTokenX / MockUSDC
+- Test tokens with public `mint()` and `faucet()` (10,000 per call)
 
 ## Dependencies
 

@@ -12,6 +12,10 @@ src/
     globals.css              → Tailwind + Causal dark theme + glass morphism
     layout.tsx               → Root layout (Inter font, Providers, Header/Footer)
     page.tsx                 → Landing page (hero, value props, how it works)
+    fundraises/
+      page.tsx               → Fundraise list with filters (all/active/finalized/failed)
+      create/page.tsx        → Create fundraise form (name, symbol, token economics, alpha)
+      [id]/page.tsx          → Fundraise detail (progress, contribute, claim, finalize, infra)
     proposals/
       page.tsx               → Proposal list with filters
       create/page.tsx        → Create proposal form
@@ -20,6 +24,12 @@ src/
     layout/
       Header.tsx             → Sticky nav with logo, links, theme toggle, wallet connect
       Footer.tsx             → Branded footer
+    fundraise/
+      FundraiseProgress.tsx  → Progress bar (raised vs goal)
+      FundraiseStatusBadge.tsx → Status indicator (Funding/Finalized/Failed)
+      ContributePanel.tsx    → USDC contribution form with approval flow
+      ClaimPanel.tsx         → Claim tokens + refund after finalization
+      FinalizePanel.tsx      → Founder controls (finalize raise / force finalize)
     proposal/
       ProposalHeader.tsx     → Title, status badge, countdown, Snowtrace link
       SplitMergePanel.tsx    → Split/merge tokens with approval flow
@@ -34,6 +44,13 @@ src/
     TokenAmount.tsx          → Formatted token amount display
     ThemeProvider.tsx         → Dark/light mode context
   hooks/
+    useAllFundraises.ts      → Fetch all orgs from CausalOrganizations (batch read)
+    useFundraiseInfo.ts      → Single org info + sale + deployed contracts
+    useUserContribution.ts   → User's committed, accumulator, claimed, allocation
+    useCreateOrganization.ts → Create organization via CausalOrganizations
+    useCommit.ts             → Commit USDC to a fundraise
+    useFinalize.ts           → finalizeRaise / forceFinalize
+    useFundraiseClaim.ts     → Claim tokens after finalization
     useProposalInfo.ts       → Read proposal details from contract
     useConditionalBalances.ts → Read all 4 conditional token balances
     useTokenBalance.ts       → Generic ERC20 balance + symbol + decimals
@@ -95,6 +112,7 @@ Copy `.env.example` to `.env.local`.
 | `NEXT_PUBLIC_UNISWAP_V3_FACTORY` | Yes | — | Uniswap V3 Factory on Fuji |
 | `NEXT_PUBLIC_POSITION_MANAGER` | Yes | — | Uniswap V3 NonfungiblePositionManager |
 | `NEXT_PUBLIC_SWAP_ROUTER` | Yes | — | Uniswap V3 SwapRouter |
+| `NEXT_PUBLIC_CAUSAL_ORGANIZATIONS_ADDRESS` | Yes | — | CausalOrganizations deployed address |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | — | WalletConnect project ID |
 <!-- /AUTO-GENERATED: env-vars -->
 

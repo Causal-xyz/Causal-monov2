@@ -19,6 +19,7 @@ export const CONTRACTS = {
   uniswapV3Factory: (process.env.NEXT_PUBLIC_UNISWAP_V3_FACTORY ?? "") as `0x${string}`,
   positionManager: (process.env.NEXT_PUBLIC_POSITION_MANAGER ?? "") as `0x${string}`,
   swapRouter: (process.env.NEXT_PUBLIC_SWAP_ROUTER ?? "") as `0x${string}`,
+  causalOrganizations: (process.env.NEXT_PUBLIC_CAUSAL_ORGANIZATIONS_ADDRESS ?? "") as `0x${string}`,
 } as const;
 
 /** Uniswap V3 fee tiers */

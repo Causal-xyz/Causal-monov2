@@ -152,6 +152,27 @@ export const futarchyProposalAbi = [
     outputs: [{ name: "", type: "address" }],
     stateMutability: "view",
   },
+  {
+    type: "function",
+    name: "treasury",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "usdcRequested",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "tokensToMint",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
   // --- Write functions ---
   {
     type: "function",
