@@ -25,11 +25,7 @@ interface IOracle {
 interface IUniswapV3Factory {
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
     event PoolCreated(
-        address indexed token0,
-        address indexed token1,
-        uint24 indexed fee,
-        int24 tickSpacing,
-        address pool
+        address indexed token0, address indexed token1, uint24 indexed fee, int24 tickSpacing, address pool
     );
     event FeeAmountEnabled(uint24 indexed fee, int24 indexed tickSpacing);
 
@@ -56,22 +52,15 @@ interface INonfungiblePositionManager {
         uint256 deadline;
     }
 
-    function createAndInitializePoolIfNecessary(
-        address token0,
-        address token1,
-        uint24 fee,
-        uint160 sqrtPriceX96
-    ) external payable returns (address pool);
+    function createAndInitializePoolIfNecessary(address token0, address token1, uint24 fee, uint160 sqrtPriceX96)
+        external
+        payable
+        returns (address pool);
 
     function mint(MintParams calldata params)
         external
         payable
-        returns (
-            uint256 tokenId,
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        );
+        returns (uint256 tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 }
 
 contract ConditionalToken is ERC20 {
@@ -80,12 +69,9 @@ contract ConditionalToken is ERC20 {
     address public immutable manager;
     uint8 private immutable _tokenDecimals;
 
-    constructor(
-        string memory name_,
-        string memory symbol_,
-        address manager_,
-        uint8 tokenDecimals_
-    ) ERC20(name_, symbol_) {
+    constructor(string memory name_, string memory symbol_, address manager_, uint8 tokenDecimals_)
+        ERC20(name_, symbol_)
+    {
         manager = manager_;
         _tokenDecimals = tokenDecimals_;
     }
@@ -130,9 +116,12 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
     error InvalidFeeTier();
     error TransferFailed();
     error TwapWindowTooShort();
+    error NotOwnerOrFactory();
 
     uint256 public immutable proposalId;
     string public title;
+
+    address public immutable factory;
 
     IERC20 public immutable tokenX;
     IERC20 public immutable usdc;
@@ -174,6 +163,11 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
     event AmmsSet(address ammYesPair, address ammNoPair);
     event Executed(uint256 indexed proposalId, address indexed recipient, address token, uint256 amount);
 
+    modifier onlyOwnerOrFactory() {
+        if (msg.sender != owner() && msg.sender != factory) revert NotOwnerOrFactory();
+        _;
+    }
+
     constructor(
         uint256 proposalId_,
         string memory title_,
@@ -187,7 +181,8 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         address treasury_,
         uint256 usdcRequested_,
         uint256 tokensToMint_,
-        uint32 twapWindow_
+        uint32 twapWindow_,
+        address factory_
     ) Ownable(owner_) {
         require(tokenX_ != address(0), "tokenX=0");
         require(usdc_ != address(0), "usdc=0");
@@ -197,6 +192,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
 
         proposalId = proposalId_;
         title = title_;
+        factory = factory_;
         tokenX = IERC20(tokenX_);
         usdc = IERC20(usdc_);
         resolutionTimestamp = resolutionTimestamp_;
@@ -221,10 +217,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
             xDecimals
         );
         noX = new ConditionalToken(
-            string.concat(xSymbol, " NO (P", pid, ")"),
-            string.concat("n", xSymbol, "-P", pid),
-            address(this),
-            xDecimals
+            string.concat(xSymbol, " NO (P", pid, ")"), string.concat("n", xSymbol, "-P", pid), address(this), xDecimals
         );
         yesUsdc = new ConditionalToken(
             string.concat(usdcSymbol, " YES (P", pid, ")"),
@@ -250,6 +243,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         _;
     }
 
+    /// @notice Set up AMMs using tokens already held by this contract (original path).
     function createAndSetAmms(
         address uniswapV3Factory_,
         address positionManager_,
@@ -261,6 +255,67 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         uint256 usdcForYesXPoolLiquidity,
         uint256 usdcForNoXPoolLiquidity
     ) external onlyOwner {
+        _createAmms(
+            uniswapV3Factory_,
+            positionManager_,
+            fee,
+            initialPriceYesXUsdcSqrtX96,
+            initialPriceNoXUsdcSqrtX96,
+            yesXLiquidityAmount,
+            noXLiquidityAmount,
+            usdcForYesXPoolLiquidity,
+            usdcForNoXPoolLiquidity
+        );
+    }
+
+    /// @notice Pull tokenX + USDC from caller, split tokenX into yesX/noX, then create AMMs.
+    /// @dev Callable by owner or factory. The caller must have approved this contract for both tokens.
+    function setupAmmWithLiquidity(
+        address uniswapV3Factory_,
+        address positionManager_,
+        uint24 fee,
+        uint160 initialPriceYesXUsdcSqrtX96,
+        uint160 initialPriceNoXUsdcSqrtX96,
+        uint256 tokenXAmount,
+        uint256 usdcAmount
+    ) external onlyOwnerOrFactory {
+        if (tokenXAmount == 0 || usdcAmount == 0) revert ZeroAmount();
+
+        // Pull tokenX from caller and split into yesX + noX (held by this contract)
+        tokenX.safeTransferFrom(msg.sender, address(this), tokenXAmount);
+        yesX.mint(address(this), tokenXAmount);
+        noX.mint(address(this), tokenXAmount);
+
+        // Pull USDC from caller
+        usdc.safeTransferFrom(msg.sender, address(this), usdcAmount);
+
+        // Split liquidity 50/50 between YES and NO pools
+        uint256 usdcPerPool = usdcAmount / 2;
+
+        _createAmms(
+            uniswapV3Factory_,
+            positionManager_,
+            fee,
+            initialPriceYesXUsdcSqrtX96,
+            initialPriceNoXUsdcSqrtX96,
+            tokenXAmount,
+            tokenXAmount,
+            usdcPerPool,
+            usdcPerPool
+        );
+    }
+
+    function _createAmms(
+        address uniswapV3Factory_,
+        address positionManager_,
+        uint24 fee,
+        uint160 initialPriceYesXUsdcSqrtX96,
+        uint160 initialPriceNoXUsdcSqrtX96,
+        uint256 yesXLiquidityAmount,
+        uint256 noXLiquidityAmount,
+        uint256 usdcForYesXPoolLiquidity,
+        uint256 usdcForNoXPoolLiquidity
+    ) internal {
         if (address(ammYesPair) != address(0) || address(ammNoPair) != address(0)) {
             revert AmmsAlreadySet();
         }
@@ -281,30 +336,19 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
 
         // yesX / USDC
         (address token0YesX, address token1YesX, bool yesXIsToken0) =
-            address(yesX) < address(usdc)
-                ? (address(yesX), address(usdc), true)
-                : (address(usdc), address(yesX), false);
+            address(yesX) < address(usdc) ? (address(yesX), address(usdc), true) : (address(usdc), address(yesX), false);
 
         address yesXUsdcPool = positionManager.createAndInitializePoolIfNecessary(
-            token0YesX,
-            token1YesX,
-            fee,
-            initialPriceYesXUsdcSqrtX96
+            token0YesX, token1YesX, fee, initialPriceYesXUsdcSqrtX96
         );
         if (yesXUsdcPool == address(0)) revert UniswapV3PoolCreationFailed();
 
         // noX / USDC
         (address token0NoX, address token1NoX, bool noXIsToken0) =
-            address(noX) < address(usdc)
-                ? (address(noX), address(usdc), true)
-                : (address(usdc), address(noX), false);
+            address(noX) < address(usdc) ? (address(noX), address(usdc), true) : (address(usdc), address(noX), false);
 
-        address noXUsdcPool = positionManager.createAndInitializePoolIfNecessary(
-            token0NoX,
-            token1NoX,
-            fee,
-            initialPriceNoXUsdcSqrtX96
-        );
+        address noXUsdcPool =
+            positionManager.createAndInitializePoolIfNecessary(token0NoX, token1NoX, fee, initialPriceNoXUsdcSqrtX96);
         if (noXUsdcPool == address(0)) revert UniswapV3PoolCreationFailed();
 
         ammYesPair = IOracle(yesXUsdcPool);
@@ -312,59 +356,46 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
 
         IERC20(address(yesX)).forceApprove(address(positionManager), yesXLiquidityAmount);
         IERC20(address(noX)).forceApprove(address(positionManager), noXLiquidityAmount);
-        usdc.forceApprove(
-            address(positionManager),
-            usdcForYesXPoolLiquidity + usdcForNoXPoolLiquidity
-        );
+        usdc.forceApprove(address(positionManager), usdcForYesXPoolLiquidity + usdcForNoXPoolLiquidity);
 
-        INonfungiblePositionManager.MintParams memory yesMintParams =
-            INonfungiblePositionManager.MintParams({
-                token0: token0YesX,
-                token1: token1YesX,
-                fee: fee,
-                tickLower: tickLower,
-                tickUpper: tickUpper,
-                amount0Desired: yesXIsToken0 ? yesXLiquidityAmount : usdcForYesXPoolLiquidity,
-                amount1Desired: yesXIsToken0 ? usdcForYesXPoolLiquidity : yesXLiquidityAmount,
-                amount0Min: 0,
-                amount1Min: 0,
-                recipient: address(this),
-                deadline: block.timestamp + 1 hours
-            });
+        INonfungiblePositionManager.MintParams memory yesMintParams = INonfungiblePositionManager.MintParams({
+            token0: token0YesX,
+            token1: token1YesX,
+            fee: fee,
+            tickLower: tickLower,
+            tickUpper: tickUpper,
+            amount0Desired: yesXIsToken0 ? yesXLiquidityAmount : usdcForYesXPoolLiquidity,
+            amount1Desired: yesXIsToken0 ? usdcForYesXPoolLiquidity : yesXLiquidityAmount,
+            amount0Min: 0,
+            amount1Min: 0,
+            recipient: address(this),
+            deadline: block.timestamp + 1 hours
+        });
 
-        (
-            uint256 mintedYesTokenId,
-            uint128 yesLiquidity,
-            uint256 amount0YesX,
-            uint256 amount1YesX
-        ) = positionManager.mint(yesMintParams);
+        (uint256 mintedYesTokenId, uint128 yesLiquidity, uint256 amount0YesX, uint256 amount1YesX) =
+            positionManager.mint(yesMintParams);
 
         if (yesLiquidity == 0 || amount0YesX == 0 || amount1YesX == 0) {
             revert UniswapV3LiquidityAdditionFailed();
         }
         yesPositionTokenId = mintedYesTokenId;
 
-        INonfungiblePositionManager.MintParams memory noMintParams =
-            INonfungiblePositionManager.MintParams({
-                token0: token0NoX,
-                token1: token1NoX,
-                fee: fee,
-                tickLower: tickLower,
-                tickUpper: tickUpper,
-                amount0Desired: noXIsToken0 ? noXLiquidityAmount : usdcForNoXPoolLiquidity,
-                amount1Desired: noXIsToken0 ? usdcForNoXPoolLiquidity : noXLiquidityAmount,
-                amount0Min: 0,
-                amount1Min: 0,
-                recipient: address(this),
-                deadline: block.timestamp + 1 hours
-            });
+        INonfungiblePositionManager.MintParams memory noMintParams = INonfungiblePositionManager.MintParams({
+            token0: token0NoX,
+            token1: token1NoX,
+            fee: fee,
+            tickLower: tickLower,
+            tickUpper: tickUpper,
+            amount0Desired: noXIsToken0 ? noXLiquidityAmount : usdcForNoXPoolLiquidity,
+            amount1Desired: noXIsToken0 ? usdcForNoXPoolLiquidity : noXLiquidityAmount,
+            amount0Min: 0,
+            amount1Min: 0,
+            recipient: address(this),
+            deadline: block.timestamp + 1 hours
+        });
 
-        (
-            uint256 mintedNoTokenId,
-            uint128 noLiquidity,
-            uint256 amount0NoX,
-            uint256 amount1NoX
-        ) = positionManager.mint(noMintParams);
+        (uint256 mintedNoTokenId, uint128 noLiquidity, uint256 amount0NoX, uint256 amount1NoX) =
+            positionManager.mint(noMintParams);
 
         if (noLiquidity == 0 || amount0NoX == 0 || amount1NoX == 0) {
             revert UniswapV3LiquidityAdditionFailed();
@@ -374,11 +405,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         emit AmmsSet(address(ammYesPair), address(ammNoPair));
     }
 
-    function _fullRangeTicks(int24 tickSpacing)
-        internal
-        pure
-        returns (int24 tickLower, int24 tickUpper)
-    {
+    function _fullRangeTicks(int24 tickSpacing) internal pure returns (int24 tickLower, int24 tickUpper) {
         tickLower = (-887272 / tickSpacing) * tickSpacing;
         tickUpper = (887272 / tickSpacing) * tickSpacing;
     }
@@ -415,7 +442,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         secondsAgos[0] = twapWindow;
         secondsAgos[1] = 0;
 
-        (int56[] memory tickCumulatives, ) = pool.observe(secondsAgos);
+        (int56[] memory tickCumulatives,) = pool.observe(secondsAgos);
         return (tickCumulatives[1] - tickCumulatives[0]) / int56(int32(twapWindow));
     }
 
@@ -483,27 +510,23 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
 }
 
 contract FutarchyFactoryPoc is Ownable {
+    using SafeERC20 for IERC20;
+
     uint256 public proposalCount;
     mapping(uint256 => address) public proposals;
 
     /// @notice Treasury address for this factory. address(0) for standalone mode.
     ITreasury public immutable treasury;
 
+    event ProposalCreatedWithAmm(
+        uint256 indexed proposalId, address indexed proposal, address ammYesPair, address ammNoPair
+    );
+
     constructor(address owner_, address treasury_) Ownable(owner_) {
         treasury = ITreasury(treasury_);
     }
 
     /// @notice Create a new futarchy proposal with treasury integration.
-    /// @param title Proposal title
-    /// @param tokenX Governance token (OrgToken) address
-    /// @param usdc USDC address
-    /// @param resolutionTimestamp When the proposal can be resolved
-    /// @param transferToken Token to transfer on YES (used in standalone mode)
-    /// @param recipient Who receives funds/tokens on YES outcome
-    /// @param transferAmount Amount to transfer on YES (standalone mode)
-    /// @param usdcRequested USDC to spend from treasury on YES (treasury mode)
-    /// @param tokensToMint Governance tokens to mint via treasury on YES (treasury mode)
-    /// @param twapWindow_ TWAP observation window in seconds (min 60)
     function createProposal(
         string memory title,
         address tokenX,
@@ -516,6 +539,94 @@ contract FutarchyFactoryPoc is Ownable {
         uint256 tokensToMint,
         uint32 twapWindow_
     ) external onlyOwner returns (address) {
+        return _deployProposal(
+            title,
+            tokenX,
+            usdc,
+            resolutionTimestamp,
+            transferToken,
+            recipient,
+            transferAmount,
+            usdcRequested,
+            tokensToMint,
+            twapWindow_
+        );
+    }
+
+    /// @notice Create proposal AND set up AMM pools in a single transaction.
+    /// @dev Caller must approve tokenX and USDC to this factory before calling.
+    function createProposalWithAmm(
+        string memory title,
+        address tokenX,
+        address usdc,
+        uint256 resolutionTimestamp,
+        address transferToken,
+        address recipient,
+        uint256 transferAmount,
+        uint256 usdcRequested,
+        uint256 tokensToMint,
+        uint32 twapWindow_,
+        address uniswapV3Factory_,
+        address positionManager_,
+        uint24 fee,
+        uint160 initialPriceYesXUsdcSqrtX96,
+        uint160 initialPriceNoXUsdcSqrtX96,
+        uint256 tokenXAmount,
+        uint256 usdcAmount
+    ) external onlyOwner returns (address) {
+        address proposalAddr = _deployProposal(
+            title,
+            tokenX,
+            usdc,
+            resolutionTimestamp,
+            transferToken,
+            recipient,
+            transferAmount,
+            usdcRequested,
+            tokensToMint,
+            twapWindow_
+        );
+
+        FutarchyProposalPoc proposal = FutarchyProposalPoc(proposalAddr);
+
+        // Pull tokenX + USDC from caller to this factory
+        IERC20(tokenX).safeTransferFrom(msg.sender, address(this), tokenXAmount);
+        IERC20(usdc).safeTransferFrom(msg.sender, address(this), usdcAmount);
+
+        // Approve both tokens to the proposal
+        IERC20(tokenX).forceApprove(proposalAddr, tokenXAmount);
+        IERC20(usdc).forceApprove(proposalAddr, usdcAmount);
+
+        // Let proposal pull tokens, split, and create AMMs
+        proposal.setupAmmWithLiquidity(
+            uniswapV3Factory_,
+            positionManager_,
+            fee,
+            initialPriceYesXUsdcSqrtX96,
+            initialPriceNoXUsdcSqrtX96,
+            tokenXAmount,
+            usdcAmount
+        );
+
+        emit ProposalCreatedWithAmm(
+            proposalCount, proposalAddr, address(proposal.ammYesPair()), address(proposal.ammNoPair())
+        );
+
+        return proposalAddr;
+    }
+
+    function _deployProposal(
+        string memory title,
+        address tokenX,
+        address usdc,
+        uint256 resolutionTimestamp,
+        address transferToken,
+        address recipient,
+        uint256 transferAmount,
+        uint256 usdcRequested,
+        uint256 tokensToMint,
+        uint32 twapWindow_
+    ) internal returns (address) {
         proposalCount++;
         FutarchyProposalPoc proposal = new FutarchyProposalPoc(
             proposalCount,
@@ -530,7 +641,8 @@ contract FutarchyFactoryPoc is Ownable {
             address(treasury),
             usdcRequested,
             tokensToMint,
-            twapWindow_
+            twapWindow_,
+            address(this)
         );
         proposals[proposalCount] = address(proposal);
 

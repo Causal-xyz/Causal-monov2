@@ -1,6 +1,8 @@
 "use client";
 
+import { useAccount } from "wagmi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SetupAmmPanel } from "@/components/proposal/SetupAmmPanel";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface MarketOverviewProps {
@@ -9,11 +11,30 @@ interface MarketOverviewProps {
     readonly hasAmms: boolean;
     readonly ammYesPair: `0x${string}`;
     readonly ammNoPair: `0x${string}`;
+    readonly owner: `0x${string}`;
+    readonly tokenX: `0x${string}`;
+    readonly usdc: `0x${string}`;
+    readonly address: `0x${string}`;
   };
+  readonly onRefetch?: () => void;
 }
 
-export function MarketOverview({ proposal }: MarketOverviewProps) {
+export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
+  const { address } = useAccount();
+  const isOwner = address?.toLowerCase() === proposal.owner.toLowerCase();
+
   if (!proposal.hasAmms) {
+    if (isOwner) {
+      return (
+        <SetupAmmPanel
+          proposalAddress={proposal.address}
+          tokenX={proposal.tokenX}
+          usdc={proposal.usdc}
+          onSuccess={onRefetch}
+        />
+      );
+    }
+
     return (
       <Card className="glass-card rounded-xl border-border">
         <CardHeader>
@@ -21,9 +42,8 @@ export function MarketOverview({ proposal }: MarketOverviewProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            AMMs have not been set up yet. The proposal owner needs to call{" "}
-            <code className="rounded bg-muted px-1 text-xs">createAndSetAmms</code>{" "}
-            to create the Uniswap V3 pools.
+            Awaiting AMM setup by the proposal owner. Once pools are created,
+            conditional tokens can be traded.
           </p>
         </CardContent>
       </Card>

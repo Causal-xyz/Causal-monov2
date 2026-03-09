@@ -135,6 +135,13 @@ export const futarchyProposalAbi = [
   },
   {
     type: "function",
+    name: "factory",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getTokenSet",
     inputs: [],
     outputs: [
@@ -194,6 +201,21 @@ export const futarchyProposalAbi = [
       { name: "noXLiquidityAmount", type: "uint256" },
       { name: "usdcForYesXPoolLiquidity", type: "uint256" },
       { name: "usdcForNoXPoolLiquidity", type: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setupAmmWithLiquidity",
+    inputs: [
+      { name: "uniswapV3Factory_", type: "address" },
+      { name: "positionManager_", type: "address" },
+      { name: "fee", type: "uint24" },
+      { name: "initialPriceYesXUsdcSqrtX96", type: "uint160" },
+      { name: "initialPriceNoXUsdcSqrtX96", type: "uint160" },
+      { name: "tokenXAmount", type: "uint256" },
+      { name: "usdcAmount", type: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -362,4 +384,5 @@ export const futarchyProposalAbi = [
   { type: "error", name: "InvalidFeeTier", inputs: [] },
   { type: "error", name: "TransferFailed", inputs: [] },
   { type: "error", name: "TwapWindowTooShort", inputs: [] },
+  { type: "error", name: "NotOwnerOrFactory", inputs: [] },
 ] as const;

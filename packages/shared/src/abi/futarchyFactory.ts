@@ -27,6 +27,31 @@ export const futarchyFactoryAbi = [
   },
   {
     type: "function",
+    name: "createProposalWithAmm",
+    inputs: [
+      { name: "title", type: "string" },
+      { name: "tokenX", type: "address" },
+      { name: "usdc", type: "address" },
+      { name: "resolutionTimestamp", type: "uint256" },
+      { name: "transferToken", type: "address" },
+      { name: "recipient", type: "address" },
+      { name: "transferAmount", type: "uint256" },
+      { name: "usdcRequested", type: "uint256" },
+      { name: "tokensToMint", type: "uint256" },
+      { name: "twapWindow_", type: "uint32" },
+      { name: "uniswapV3Factory_", type: "address" },
+      { name: "positionManager_", type: "address" },
+      { name: "fee", type: "uint24" },
+      { name: "initialPriceYesXUsdcSqrtX96", type: "uint160" },
+      { name: "initialPriceNoXUsdcSqrtX96", type: "uint160" },
+      { name: "tokenXAmount", type: "uint256" },
+      { name: "usdcAmount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "treasury",
     inputs: [],
     outputs: [{ name: "", type: "address" }],
@@ -73,6 +98,16 @@ export const futarchyFactoryAbi = [
     inputs: [
       { name: "previousOwner", type: "address", indexed: true },
       { name: "newOwner", type: "address", indexed: true },
+    ],
+  },
+  {
+    type: "event",
+    name: "ProposalCreatedWithAmm",
+    inputs: [
+      { name: "proposalId", type: "uint256", indexed: true },
+      { name: "proposal", type: "address", indexed: true },
+      { name: "ammYesPair", type: "address", indexed: false },
+      { name: "ammNoPair", type: "address", indexed: false },
     ],
   },
 ] as const;

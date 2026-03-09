@@ -136,9 +136,11 @@ Factory contract that deploys new proposals and maintains a registry.
 
 ```
 FutarchyFactoryPoc
-├── proposalCount           → auto-incrementing counter
-├── proposals[id]           → mapping from ID to proposal address
-└── createProposal(...)     → onlyOwner, deploys FutarchyProposalPoc
+├── proposalCount               → auto-incrementing counter
+├── proposals[id]               → mapping from ID to proposal address
+├── createProposal(...)         → onlyOwner, deploys proposal without AMM
+├── createProposalWithAmm(...)  → onlyOwner, deploys proposal + AMM pools in one tx
+└── _deployProposal(...)        → internal shared deployment logic
 ```
 
 ---
@@ -274,13 +276,35 @@ For proposal ID 1 with tokenX = ETH and usdc = USDC:
 
 ## 6. Phase 2: AMM Setup
 
-### Who: Proposal owner
+### Who: Proposal owner or factory
+
+There are **three paths** to set up AMM pools:
+
+| Path | Function | Who | When |
+|------|----------|-----|------|
+| **A. During creation** | `factory.createProposalWithAmm()` | Factory owner | At proposal creation (recommended) |
+| **B. After creation (new)** | `proposal.setupAmmWithLiquidity()` | Owner or factory | After creation, pulls tokens from caller |
+| **C. After creation (legacy)** | `proposal.createAndSetAmms()` | Owner only | After manual split + USDC transfer to contract |
+
+### Path A: Create Proposal with AMM (Recommended)
+
+The simplest path — deploys the proposal and sets up AMM pools in a single atomic transaction.
+
+**User flow**: Approve tokenX → Approve USDC → Call `createProposalWithAmm()` (3 txs total)
+
+The factory pulls tokenX + USDC from the caller, approves them to the proposal, and calls `setupAmmWithLiquidity()`.
+
+### Path B: Setup AMM After Creation
+
+For proposals created without AMM. The owner calls `setupAmmWithLiquidity()` directly on the proposal, which pulls tokenX + USDC from the caller, splits tokenX into yesX/noX, splits USDC 50/50 between pools, and creates AMMs.
+
+### Path C: Legacy Manual Setup
 
 ### How: `FutarchyProposalPoc.createAndSetAmms()`
 
-This is the most complex operation. It creates two Uniswap V3 pools and provides initial full-range liquidity.
+This is the original path kept for backward compatibility. It creates two Uniswap V3 pools using tokens already held by the contract.
 
-### Prerequisites
+### Prerequisites (Path C only)
 
 Before calling `createAndSetAmms()`, the owner must:
 1. Split some tokenX into yesX + noX (via `splitX()`)
@@ -830,30 +854,33 @@ The capital cost scales with both the manipulation size and the window duration.
 ## 15. Access Control Model
 
 ```
-┌──────────────────────────────────────────────────┐
-│                ACCESS CONTROL                     │
-├──────────────────┬───────────────────────────────┤
-│ Function         │ Who Can Call                   │
-├──────────────────┼───────────────────────────────┤
-│ createProposal   │ Factory owner only             │
-│ createAndSetAmms │ Proposal owner only            │
-│ splitX           │ Anyone (with token approval)   │
-│ splitUsdc        │ Anyone (with USDC approval)    │
-│ mergeX           │ Anyone (with yes+no balance)   │
-│ mergeUsdc        │ Anyone (with yes+no balance)   │
-│ resolve          │ Anyone (after timestamp)       │
-│ redeemWinningX   │ Anyone (with winning tokens)   │
-│ redeemWinningUsdc│ Anyone (with winning tokens)   │
-│ mint/burn (CT)   │ Manager contract only          │
-├──────────────────┼───────────────────────────────┤
-│ MODIFIERS        │                               │
-├──────────────────┼───────────────────────────────┤
-│ onlyOwner        │ Owner address                  │
-│ onlyManager      │ FutarchyProposalPoc address    │
-│ onlyUnresolved   │ outcome == Unresolved          │
-│ onlyResolved     │ outcome != Unresolved          │
-│ nonReentrant     │ ReentrancyGuard (OpenZeppelin) │
-└──────────────────┴───────────────────────────────┘
+┌───────────────────────────────────────────────────────┐
+│                   ACCESS CONTROL                       │
+├────────────────────────┬──────────────────────────────┤
+│ Function               │ Who Can Call                  │
+├────────────────────────┼──────────────────────────────┤
+│ createProposal         │ Factory owner only            │
+│ createProposalWithAmm  │ Factory owner only            │
+│ createAndSetAmms       │ Proposal owner only           │
+│ setupAmmWithLiquidity  │ Owner OR factory              │
+│ splitX                 │ Anyone (with token approval)  │
+│ splitUsdc              │ Anyone (with USDC approval)   │
+│ mergeX                 │ Anyone (with yes+no balance)  │
+│ mergeUsdc              │ Anyone (with yes+no balance)  │
+│ resolve                │ Anyone (after timestamp)      │
+│ redeemWinningX         │ Anyone (with winning tokens)  │
+│ redeemWinningUsdc      │ Anyone (with winning tokens)  │
+│ mint/burn (CT)         │ Manager contract only         │
+├────────────────────────┼──────────────────────────────┤
+│ MODIFIERS              │                              │
+├────────────────────────┼──────────────────────────────┤
+│ onlyOwner              │ Owner address                 │
+│ onlyOwnerOrFactory     │ Owner OR factory address      │
+│ onlyManager            │ FutarchyProposalPoc address   │
+│ onlyUnresolved         │ outcome == Unresolved         │
+│ onlyResolved           │ outcome != Unresolved         │
+│ nonReentrant           │ ReentrancyGuard (OpenZeppelin)│
+└────────────────────────┴──────────────────────────────┘
 ```
 
 ---
@@ -876,6 +903,7 @@ The capital cost scales with both the manipulation size and the window duration.
 | `InvalidFeeTier()` | Fee tier has no tickSpacing configured | createAndSetAmms |
 | `TransferFailed()` | (Defined, SafeERC20 handles this internally) | — |
 | `TwapWindowTooShort()` | twapWindow_ constructor argument < 60 seconds | FutarchyProposalPoc constructor |
+| `NotOwnerOrFactory()` | Caller is neither owner nor factory | setupAmmWithLiquidity |
 
 ---
 
@@ -890,8 +918,9 @@ The capital cost scales with both the manipulation size and the window duration.
 | `Resolved` | proposalId (indexed), outcome | resolve |
 | `RedeemedX` | caller (indexed), receiver (indexed), winningSide (indexed), amount | redeemWinningX |
 | `RedeemedUsdc` | caller (indexed), receiver (indexed), winningSide (indexed), amount | redeemWinningUsdc |
-| `AmmsSet` | ammYesPair, ammNoPair | createAndSetAmms |
+| `AmmsSet` | ammYesPair, ammNoPair | createAndSetAmms, setupAmmWithLiquidity |
 | `Executed` | proposalId (indexed), recipient (indexed), token, amount | resolve (Yes only) |
+| `ProposalCreatedWithAmm` | proposalId (indexed), proposal (indexed), ammYesPair, ammNoPair | createProposalWithAmm (factory) |
 
 ---
 

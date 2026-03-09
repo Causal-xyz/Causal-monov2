@@ -33,7 +33,8 @@ src/
     proposal/
       ProposalHeader.tsx     → Title, status badge, countdown, Snowtrace link
       SplitMergePanel.tsx    → Split/merge tokens with approval flow
-      MarketOverview.tsx     → YES/NO pool addresses and market info
+      MarketOverview.tsx     → YES/NO pool addresses, market info, or SetupAmmPanel for owner
+      SetupAmmPanel.tsx     → AMM pool setup form (fee tier, seed amounts, prices, multi-step approval)
       PortfolioPanel.tsx     → User's conditional token balances
       ResolutionPanel.tsx    → Resolve button (permissionless, after deadline)
       RedemptionPanel.tsx    → Redeem winning tokens post-resolution
@@ -60,11 +61,14 @@ src/
     useResolve.ts            → resolve() transaction hook
     useRedeem.ts             → redeemWinningX / redeemWinningUsdc hooks
     useAllProposals.ts       → Fetch all proposals from factory
-    useCreateProposal.ts     → Create proposal via factory
+    useCreateProposal.ts     → Create proposal via factory (without AMM)
+    useCreateProposalWithAmm.ts → Create proposal + AMM pools in one tx via factory
+    useSetupAmm.ts           → Setup AMM pools on existing proposal (setupAmmWithLiquidity)
     useCountdown.ts          → Live countdown timer
   lib/
     utils.ts                 → cn() helper (clsx + tailwind-merge)
     wagmi.ts                 → Wagmi config (Avalanche Fuji, injected connector)
+    sqrtPrice.ts             → Uniswap V3 sqrtPriceX96 conversion utilities
   providers.tsx              → WagmiProvider + QueryClientProvider + ThemeProvider
 public/                      → Static assets
 ```

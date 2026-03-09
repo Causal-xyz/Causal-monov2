@@ -29,13 +29,13 @@ apps/
       components/
         layout/     → Header, Footer
         fundraise/  → FundraiseProgress, FundraiseStatusBadge, ContributePanel, ClaimPanel, FinalizePanel
-        proposal/   → ProposalHeader, SplitMergePanel, MarketOverview, PortfolioPanel, ResolutionPanel, RedemptionPanel
+        proposal/   → ProposalHeader, SplitMergePanel, MarketOverview, SetupAmmPanel, PortfolioPanel, ResolutionPanel, RedemptionPanel
         ui/         → shadcn/ui components (Button, Card, Badge)
         ConnectWallet, StatusBadge, TransactionButton, TokenAmount, ThemeProvider
       hooks/
         Fundraise:  → useAllFundraises, useFundraiseInfo, useUserContribution, useCreateOrganization, useCommit, useFinalize, useFundraiseClaim
-        Proposals:  → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useTokenBalance, useCountdown
-      lib/          → utils.ts, wagmi.ts
+        Proposals:  → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useCreateProposalWithAmm, useSetupAmm, useTokenBalance, useCountdown
+      lib/          → utils.ts, wagmi.ts, sqrtPrice.ts
       providers.tsx → WagmiProvider + QueryClient + ThemeProvider
   api/          → Fastify backend (port 3001)
     src/
@@ -49,15 +49,16 @@ apps/
       OrgDeployer.sol         → Factory: deploys OrgToken + Treasury + FutarchyFactory per org
       OrgToken.sol            → ERC20 governance token with controlled minting
       Treasury.sol            → Per-org treasury holding USDC, authorizes proposals
-      futarchy.sol            → ConditionalToken, FutarchyProposalPoc (configurable twapWindow), FutarchyFactoryPoc
+      futarchy.sol            → ConditionalToken, FutarchyProposalPoc (factory field, setupAmmWithLiquidity), FutarchyFactoryPoc (createProposalWithAmm)
       MockTokenX.sol          → Test ERC20 (CTK, 18 decimals, public mint + faucet)
       MockUSDC.sol            → Test USDC (mUSDC, 6 decimals, public mint + faucet)
     script/
       Deploy.s.sol            → Deploys MockTokenX, MockUSDC, CausalOrganizations
       Redeploy.s.sol          → Redeploys OrgDeployer + CausalOrganizations (reuses mock tokens)
+      RedeployWithAmm.s.sol   → Redeploys after AMM integration changes
     test/
       CausalOrganizations.t.sol → 23 tests (create, commit, finalize, claim, lifecycle)
-      Futarchy.t.sol            → 5 tests (proposal, resolve yes/no, edge cases)
+      Futarchy.t.sol            → 13 tests (proposal, resolve, AMM setup, createProposalWithAmm, edge cases)
 packages/
   shared/             → Types, constants, ABIs
     src/
@@ -164,6 +165,7 @@ After deployment, set the contract addresses in each app's `.env.local`.
 
 - [Futarchy Protocol Flow (markdown)](docs/futarchy-flow.md) — complete lifecycle, token flows, TWAP oracle, access control, errors/events
 - [Futarchy Protocol Flow (visual)](docs/futarchy-flow.html) — interactive HTML page with diagrams, open in browser
+- [Future: Split Window](docs/future-amm-split-window.md) — remaining planned improvement: enforced split window before trading (AMM setup is now implemented)
 
 ## Git
 

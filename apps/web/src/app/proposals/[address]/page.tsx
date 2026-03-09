@@ -48,7 +48,7 @@ export default function ProposalDetailPage({ params }: Props) {
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Left column */}
         <div className="space-y-6">
-          <MarketOverview proposal={proposal} />
+          <MarketOverview proposal={proposal} onRefetch={refetch} />
 
           {!isResolved && (
             <SplitMergePanel

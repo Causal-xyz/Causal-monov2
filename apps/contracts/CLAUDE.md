@@ -17,9 +17,10 @@ src/
   MockUSDC.sol            → Test stablecoin (mUSDC, 6 decimals, public mint + faucet)
 test/
   CausalOrganizations.t.sol → 23 tests (org creation, commit, finalize, claim, full lifecycle)
-  Futarchy.t.sol            → 5 tests (proposal, resolve yes/no, edge cases)
+  Futarchy.t.sol            → 13 tests (proposal, resolve, AMM setup, createProposalWithAmm, edge cases)
 script/
   Deploy.s.sol              → Deploys MockTokenX, MockUSDC, OrgDeployer, CausalOrganizations
+  RedeployWithAmm.s.sol     → Redeploys after AMM integration changes (reuses mock tokens)
 lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V3)
 ```
 
@@ -54,18 +55,24 @@ lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V
 
 ### FutarchyProposalPoc
 - Creates 4 conditional tokens: yesX, noX, yesUsdc, noUsdc
+- `factory` — immutable field set by factory at construction
 - `splitX()` / `splitUsdc()` — split base tokens into yes/no pairs
 - `mergeX()` / `mergeUsdc()` — merge pairs back to base
-- `createAndSetAmms()` — creates Uniswap V3 pools with full-range liquidity
+- `createAndSetAmms()` — creates Uniswap V3 pools with full-range liquidity (onlyOwner, backward compatible)
+- `setupAmmWithLiquidity()` — pulls tokenX + USDC from caller, splits tokenX, creates AMMs in one call (onlyOwnerOrFactory)
+- `_createAmms()` — internal function with core AMM setup logic (shared by both public methods)
 - `resolve()` — resolves via configurable TWAP (`twapWindow`, min 60s); on YES, calls `treasury.spendFunds()` / `treasury.mintTokens()`
 - `twapWindow` — immutable, set at construction, configurable per proposal (default 3600s for production, shorter for testing)
 - Supports both treasury mode and standalone mode (`address(0)` treasury)
 
 ### FutarchyFactoryPoc
 - Factory for creating proposals (Ownable)
-- `createProposal()` accepts `twapWindow_` parameter (passed to FutarchyProposalPoc constructor)
+- `createProposal()` — deploys proposal without AMM (backward compatible)
+- `createProposalWithAmm()` — deploys proposal + sets up AMM pools in a single atomic transaction; pulls tokenX + USDC from caller, approves to proposal, calls `setupAmmWithLiquidity()`
+- `_deployProposal()` — internal helper shared by both creation paths
 - Auto-calls `treasury.authorizeProposal()` on creation
 - Maintains on-chain proposal registry (`proposals[id]`)
+- Emits `ProposalCreatedWithAmm` event with pool addresses
 
 ### MockTokenX / MockUSDC
 - Test tokens with public `mint()` and `faucet()` (10,000 per call)
