@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FundraiseStatusBadge } from "@/components/fundraise/FundraiseStatusBadge";
 import { FundraiseProgress } from "@/components/fundraise/FundraiseProgress";
 import { useAllFundraises } from "@/hooks/useAllFundraises";
+import { useOrgLogos } from "@/hooks/useOrgLogos";
 import type { FundraiseStatus } from "@causal/shared";
 
 type Filter = "all" | FundraiseStatus;
 
 export default function FundraisesPage() {
   const { fundraises, count, isLoading } = useAllFundraises();
+  const logos = useOrgLogos();
   const [filter, setFilter] = useState<Filter>("all");
 
   const filtered =
@@ -34,7 +36,7 @@ export default function FundraisesPage() {
         <Link href="/fundraises/create">
           <Button className="btn-glow border-0 text-primary-foreground">
             <Plus className="mr-2 h-4 w-4" />
-            New Fundraise
+            Launch Organization
           </Button>
         </Link>
       </div>
@@ -80,13 +82,27 @@ export default function FundraisesPage() {
               <Link key={org.id} href={`/fundraises/${org.id}`}>
                 <Card className="glass-card cursor-pointer rounded-xl border-border transition-all hover:border-causal/30">
                   <CardHeader className="flex flex-row items-start justify-between pb-2">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-base font-semibold leading-tight">
-                        {org.name || `Project #${org.id}`}
-                      </CardTitle>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        ${org.symbol}
-                      </p>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      {logos[String(org.id)] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={logos[String(org.id)]}
+                          alt={org.name}
+                          className="h-10 w-10 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-base font-bold text-muted-foreground">
+                          {(org.name || "#")[0].toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <CardTitle className="text-base font-semibold leading-tight">
+                          {org.name || `Project #${org.id}`}
+                        </CardTitle>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          ${org.symbol}
+                        </p>
+                      </div>
                     </div>
                     <FundraiseStatusBadge status={org.status} />
                   </CardHeader>

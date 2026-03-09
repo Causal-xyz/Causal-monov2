@@ -155,7 +155,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
                 className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                   form.feeTier === String(opt.value)
                     ? "border-causal bg-causal/20 text-causal"
-                    : "border-border bg-background hover:border-causal/50"
+                    : "border-white/15 bg-white/5 hover:border-causal/50"
                 }`}
               >
                 {opt.label}
@@ -176,7 +176,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
               value={form.tokenXSeed}
               onChange={(e) => updateField("tokenXSeed", e.target.value)}
               placeholder="e.g. 100"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Balance: {formatBalance(tokenXBalance, tokenXDecimals)} {tokenXSymbol}
@@ -192,7 +192,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
               value={form.usdcSeed}
               onChange={(e) => updateField("usdcSeed", e.target.value)}
               placeholder="e.g. 200"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
             />
             <p className="mt-1 text-xs text-muted-foreground">
               Balance: {formatBalance(usdcBalance, usdcDecimals)} {usdcSymbol}
@@ -212,7 +212,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
               value={form.initialYesPrice}
               onChange={(e) => updateField("initialYesPrice", e.target.value)}
               placeholder="1.0"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
             />
           </div>
           <div>
@@ -225,7 +225,7 @@ export function SetupAmmPanel({ proposalAddress, tokenX, usdc, onSuccess }: Setu
               value={form.initialNoPrice}
               onChange={(e) => updateField("initialNoPrice", e.target.value)}
               placeholder="1.0"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+              className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
             />
           </div>
         </div>

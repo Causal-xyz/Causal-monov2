@@ -9,6 +9,8 @@ import {
   CONTRACTS,
 } from "@causal/shared";
 
+type OrgInfoTuple = [string, string, string, string, `0x${string}`];
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const OUTCOME_MAP = { 0: "Unresolved", 1: "Yes", 2: "No" } as const;
 
@@ -72,14 +74,14 @@ export function useAllProposals() {
     query: { enabled: factories.length > 0 },
   });
 
-  // Build flat list of (factory, proposalIndex) pairs
+  // Build flat list of (factory, orgId, proposalIndex) pairs
   const proposalSlots = useMemo(() => {
     if (!countResults) return [];
-    const slots: { factory: `0x${string}`; index: bigint }[] = [];
+    const slots: { factory: `0x${string}`; orgId: number; index: bigint }[] = [];
     countResults.forEach((r, fi) => {
       const n = Number(r.result ?? 0n);
       for (let j = 1; j <= n; j++) {
-        slots.push({ factory: factories[fi].address, index: BigInt(j) });
+        slots.push({ factory: factories[fi].address, orgId: factories[fi].orgId, index: BigInt(j) });
       }
     });
     return slots;
@@ -102,6 +104,12 @@ export function useAllProposals() {
     query: { enabled: proposalSlots.length > 0 },
   });
 
+  // Map proposal index → orgId (parallel to addrResults)
+  const proposalOrgIds = useMemo(
+    () => proposalSlots.map((s) => s.orgId),
+    [proposalSlots],
+  );
+
   const proposalAddresses = useMemo(
     () =>
       (addrResults ?? [])
@@ -109,6 +117,23 @@ export function useAllProposals() {
         .filter((a): a is `0x${string}` => !!a && a !== ZERO_ADDRESS),
     [addrResults],
   );
+
+  // Step 4b: Fetch org names
+  const orgNameContracts = useMemo(
+    () =>
+      proposalOrgIds.map((orgId) => ({
+        address: contractAddress,
+        abi: causalOrganizationsAbi,
+        functionName: "getOrgInfo" as const,
+        args: [BigInt(orgId)] as const,
+      })),
+    [proposalOrgIds, contractAddress],
+  );
+
+  const { data: orgNameResults } = useReadContracts({
+    contracts: orgNameContracts,
+    query: { enabled: proposalOrgIds.length > 0 },
+  });
 
   // Step 5: Fetch info for each proposal
   const infoContracts = useMemo(
@@ -131,6 +156,7 @@ export function useAllProposals() {
     () =>
       proposalAddresses.map((addr, i) => {
         const base = i * 4;
+        const orgInfo = orgNameResults?.[i]?.result as OrgInfoTuple | undefined;
         return {
           address: addr,
           title: (infoResults?.[base]?.result as string) ?? "",
@@ -138,9 +164,11 @@ export function useAllProposals() {
             OUTCOME_MAP[Number(infoResults?.[base + 1]?.result ?? 0) as 0 | 1 | 2],
           resolutionTimestamp: Number(infoResults?.[base + 2]?.result ?? 0n),
           id: Number(infoResults?.[base + 3]?.result ?? 0n),
+          orgId: proposalOrgIds[i] ?? 0,
+          orgName: orgInfo?.[0] ?? "",
         };
       }),
-    [proposalAddresses, infoResults],
+    [proposalAddresses, infoResults, orgNameResults, proposalOrgIds],
   );
 
   return {

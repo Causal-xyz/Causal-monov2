@@ -195,7 +195,7 @@ export function SplitMergePanel({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.0"
-              className="flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-lg outline-none transition-colors focus:border-causal/50"
+              className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-lg outline-none transition-colors focus:border-causal/50"
             />
             <Button variant="outline" size="sm" onClick={setMaxAmount}>
               MAX

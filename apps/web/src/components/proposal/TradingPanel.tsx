@@ -207,7 +207,7 @@ export function TradingPanel({
               value={customSlippage}
               onChange={(e) => setCustomSlippage(e.target.value)}
               placeholder="Custom"
-              className="w-16 rounded border border-border bg-background px-2 py-1 text-xs outline-none focus:border-causal/50"
+              className="w-16 rounded border border-white/15 bg-white/5 px-2 py-1 text-xs outline-none focus:border-causal/50"
             />
           </div>
         </div>
@@ -303,7 +303,7 @@ export function TradingPanel({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.0"
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-base outline-none transition-colors focus:border-causal/50"
+            className="flex-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-base outline-none transition-colors focus:border-causal/50"
           />
           {swapMode === "exactInput" && (
             <Button variant="outline" size="sm" onClick={setMaxAmount}>

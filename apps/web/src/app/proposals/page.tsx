@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Clock, CheckCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Clock, CheckCircle, Building2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -14,6 +15,7 @@ type Filter = "all" | "Unresolved" | "Yes" | "No";
 export default function ProposalsPage() {
   const { proposals, count, isLoading } = useAllProposals();
   const [filter, setFilter] = useState<Filter>("all");
+  const router = useRouter();
 
   const filtered =
     filter === "all"
@@ -69,39 +71,57 @@ export default function ProposalsPage() {
             const isPast = deadline.getTime() < Date.now();
 
             return (
-              <Link
+              <Card
                 key={proposal.address}
-                href={`/proposals/${proposal.address}`}
+                className="glass-card cursor-pointer rounded-xl border-border transition-all hover:border-causal/30"
+                onClick={() => router.push(`/proposals/${proposal.address}?from=${proposal.orgId}`)}
               >
-                <Card className="glass-card cursor-pointer rounded-xl border-border transition-all hover:border-causal/30">
-                  <CardHeader className="flex flex-row items-start justify-between pb-2">
-                    <CardTitle className="text-base font-semibold leading-tight">
-                      {proposal.title || `Proposal #${proposal.id}`}
-                    </CardTitle>
-                    <StatusBadge outcome={proposal.outcome} />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      {isPast ? (
-                        <CheckCircle className="h-3.5 w-3.5" />
-                      ) : (
-                        <Clock className="h-3.5 w-3.5" />
-                      )}
-                      <span>
-                        {isPast ? "Ended" : "Ends"}{" "}
-                        {deadline.toLocaleDateString()}{" "}
-                        {deadline.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                    <div className="mt-2 truncate font-mono text-xs text-muted-foreground">
-                      {proposal.address}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                <CardHeader className="flex flex-row items-start justify-between pb-2">
+                  <CardTitle className="text-base font-semibold leading-tight">
+                    {proposal.title || `Proposal #${proposal.id}`}
+                  </CardTitle>
+                  <StatusBadge outcome={proposal.outcome} />
+                </CardHeader>
+                <CardContent>
+                  {proposal.orgName && (
+                    <Link
+                      href={`/fundraises/${proposal.orgId}/dashboard`}
+                      className="mb-2 inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Building2 className="h-3 w-3" />
+                      {proposal.orgName}
+                    </Link>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {isPast ? (
+                      <CheckCircle className="h-3.5 w-3.5" />
+                    ) : (
+                      <Clock className="h-3.5 w-3.5" />
+                    )}
+                    <span>
+                      {isPast ? "Ended" : "Ends"}{" "}
+                      {deadline.toLocaleDateString()}{" "}
+                      {deadline.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
+                    <span className="truncate">{proposal.address}</span>
+                    <a
+                      href={`https://testnet.snowtrace.io/address/${proposal.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 hover:text-causal transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

@@ -37,17 +37,15 @@ export function ProposalHeader({ proposal }: ProposalHeaderProps) {
             <h1 className="text-2xl font-bold">
               {proposal.title || `Proposal #${proposal.id}`}
             </h1>
-            <div className="mt-2 flex items-center gap-2 font-mono text-xs text-muted-foreground">
+            <a
+              href={`https://testnet.snowtrace.io/address/${proposal.address}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-causal transition-colors"
+            >
               <span>{proposal.address}</span>
-              <a
-                href={`https://testnet.snowtrace.io/address/${proposal.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-causal hover:underline"
-              >
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
+              <ExternalLink className="h-3 w-3 shrink-0" />
+            </a>
           </div>
 
           <div className="text-right">

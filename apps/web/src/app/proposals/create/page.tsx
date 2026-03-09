@@ -21,7 +21,8 @@ interface FormState {
   readonly twapWindowMinutes: string;
   readonly transferToken: string;
   readonly recipient: string;
-  readonly transferAmount: string;
+  readonly usdcRequested: string;
+  readonly tokensToMint: string;
 }
 
 function buildInitialForm(searchParams: URLSearchParams): FormState {
@@ -35,7 +36,8 @@ function buildInitialForm(searchParams: URLSearchParams): FormState {
     twapWindowMinutes: "60",
     transferToken: isAddress(tokenXParam) ? tokenXParam : "",
     recipient: "",
-    transferAmount: "0",
+    usdcRequested: "0",
+    tokensToMint: "0",
   };
 }
 
@@ -57,6 +59,7 @@ function CreateProposalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const factoryParam = searchParams.get("factory") ?? "";
+  const fromOrgId = searchParams.get("from");
   const factoryAddress = (isAddress(factoryParam) ? factoryParam : CONTRACTS.factory) as `0x${string}`;
   const hasValidFactory = isAddress(factoryAddress);
 
@@ -92,9 +95,12 @@ function CreateProposalContent() {
   // Redirect to proposal detail page once we have the address
   useEffect(() => {
     if (isSuccess && newProposalAddress) {
-      router.push(`/proposals/${newProposalAddress}`);
+      const dest = fromOrgId
+        ? `/proposals/${newProposalAddress}?from=${fromOrgId}`
+        : `/proposals/${newProposalAddress}`;
+      router.push(dest);
     }
-  }, [isSuccess, newProposalAddress, router]);
+  }, [isSuccess, newProposalAddress, router, fromOrgId]);
 
   const updateField = useCallback(
     (field: keyof FormState, value: string) => {
@@ -119,7 +125,9 @@ function CreateProposalContent() {
       resolutionTimestamp,
       transferToken: (form.transferToken || form.tokenX) as `0x${string}`,
       recipient: (form.recipient || address!) as `0x${string}`,
-      transferAmount: parseUnits(form.transferAmount || "0", 18),
+      transferAmount: 0n,
+      usdcRequested: parseUnits(form.usdcRequested || "0", 6),
+      tokensToMint: parseUnits(form.tokensToMint || "0", 18),
       twapWindow: Math.max(60, parseInt(form.twapWindowMinutes || "60", 10) * 60),
     });
   }
@@ -185,7 +193,7 @@ function CreateProposalContent() {
                 value={form.title}
                 onChange={(e) => updateField("title", e.target.value)}
                 placeholder="e.g. Fund marketing initiative with 10,000 CTK"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
               />
             </div>
 
@@ -201,7 +209,7 @@ function CreateProposalContent() {
                   value={form.tokenX}
                   onChange={(e) => updateField("tokenX", e.target.value)}
                   placeholder="0x..."
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                 />
               </div>
               <div>
@@ -214,7 +222,7 @@ function CreateProposalContent() {
                   value={form.usdc}
                   onChange={(e) => updateField("usdc", e.target.value)}
                   placeholder="0x..."
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                 />
               </div>
             </div>
@@ -231,7 +239,7 @@ function CreateProposalContent() {
                     required
                     value={form.resolutionDate}
                     onChange={(e) => updateField("resolutionDate", e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                   />
                 </div>
                 <div>
@@ -243,7 +251,7 @@ function CreateProposalContent() {
                     required
                     value={form.resolutionTime}
                     onChange={(e) => updateField("resolutionTime", e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                   />
                 </div>
               </div>
@@ -263,7 +271,7 @@ function CreateProposalContent() {
                           d.toTimeString().slice(0, 5),
                         );
                       }}
-                      className="rounded-md border border-border bg-background px-2 py-1 text-xs transition-colors hover:border-causal/50 hover:bg-causal/10"
+                      className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs transition-colors hover:border-causal/50 hover:bg-causal/10"
                     >
                       +{label}
                     </button>
@@ -285,7 +293,7 @@ function CreateProposalContent() {
                   value={form.twapWindowMinutes}
                   onChange={(e) => updateField("twapWindowMinutes", e.target.value)}
                   placeholder="60"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                  className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                 />
                 <div className="flex gap-1">
                   {[1, 5, 10, 60].map((m) => (
@@ -293,7 +301,7 @@ function CreateProposalContent() {
                       key={m}
                       type="button"
                       onClick={() => updateField("twapWindowMinutes", String(m))}
-                      className="whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-xs transition-colors hover:border-causal/50 hover:bg-causal/10"
+                      className="whitespace-nowrap rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs transition-colors hover:border-causal/50 hover:bg-causal/10"
                     >
                       {m}m
                     </button>
@@ -305,7 +313,7 @@ function CreateProposalContent() {
               </p>
             </div>
 
-            {/* Transfer action (if YES wins) */}
+            {/* Execution action (if YES wins) */}
             <div className="rounded-lg border border-border/50 p-4">
               <h3 className="mb-3 text-sm font-semibold text-muted-foreground">
                 Execution Action (if YES wins)
@@ -313,40 +321,44 @@ function CreateProposalContent() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium">
-                    Transfer Token
+                    Recipient
                   </label>
                   <input
                     type="text"
-                    value={form.transferToken}
-                    onChange={(e) => updateField("transferToken", e.target.value)}
-                    placeholder="Same as Token X if empty"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                    value={form.recipient}
+                    onChange={(e) => updateField("recipient", e.target.value)}
+                    placeholder="Defaults to your address"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
-                      Recipient
+                      USDC to release
                     </label>
                     <input
                       type="text"
-                      value={form.recipient}
-                      onChange={(e) => updateField("recipient", e.target.value)}
-                      placeholder="Your address if empty"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                      inputMode="decimal"
+                      value={form.usdcRequested}
+                      onChange={(e) => updateField("usdcRequested", e.target.value)}
+                      placeholder="0"
+                      className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                     />
+                    <p className="mt-1 text-xs text-muted-foreground">Sent from treasury to recipient</p>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
-                      Amount
+                      Tokens to mint
                     </label>
                     <input
                       type="text"
-                      value={form.transferAmount}
-                      onChange={(e) => updateField("transferAmount", e.target.value)}
+                      inputMode="decimal"
+                      value={form.tokensToMint}
+                      onChange={(e) => updateField("tokensToMint", e.target.value)}
                       placeholder="0"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                      className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                     />
+                    <p className="mt-1 text-xs text-muted-foreground">New org tokens minted to recipient</p>
                   </div>
                 </div>
               </div>
