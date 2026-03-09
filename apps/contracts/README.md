@@ -1,66 +1,138 @@
-## Foundry
+# @causal/contracts — Smart Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Fundraise-to-governance platform smart contracts built with Foundry (Solidity 0.8.24).
 
-Foundry consists of:
+## Contracts
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+| Contract | Description |
+|----------|-------------|
+| **CausalOrganizations** | Singleton: create orgs, commit USDC, finalize fundraises, claim tokens |
+| **OrgDeployer** | Factory: deploys OrgToken + Treasury + FutarchyFactoryPoc per organization |
+| **OrgToken** | ERC20 governance token with controlled minting (minter role) |
+| **Treasury** | Per-org treasury holding raised USDC, authorizes futarchy proposals |
+| **FutarchyFactoryPoc** | Factory for creating futarchy proposals (per-org, owned by founder) |
+| **FutarchyProposalPoc** | Futarchy proposal with conditional tokens, resolved via Uniswap V3 TWAP |
+| **ConditionalToken** | ERC20 for conditional outcome tokens (yesX, noX, yesUsdc, noUsdc) |
+| **MockTokenX** | Test ERC20 governance token (CTK, 18 decimals, public mint + faucet) |
+| **MockUSDC** | Test stablecoin (mUSDC, 6 decimals, public mint + faucet) |
 
-## Documentation
+## Deployed Addresses — Avalanche Fuji Testnet (43113)
 
-https://book.getfoundry.sh/
+**Deployment date:** 2026-03-09
+**Deployer:** `0x1AeC293573a30ad0A7Ab55F1F64785Cf094A66De`
 
-## Usage
+### Causal Contracts
 
-### Build
+| Contract | Address |
+|----------|---------|
+| MockTokenX | [`0xecFa95675aFF2F3776F53853Bb8da5a82015FB51`](https://testnet.snowscan.xyz/address/0xecFa95675aFF2F3776F53853Bb8da5a82015FB51) |
+| MockUSDC | [`0xbeA10d851aD86B86a277aC046C24Eb989dfd027c`](https://testnet.snowscan.xyz/address/0xbeA10d851aD86B86a277aC046C24Eb989dfd027c) |
+| OrgDeployer | [`0xe7F848326D7BC06127273a3B62459F38f77df226`](https://testnet.snowscan.xyz/address/0xe7F848326D7BC06127273a3B62459F38f77df226) |
+| CausalOrganizations | [`0x82E9b30ad1c10949476F4a10d62EAC83ddBA1213`](https://testnet.snowscan.xyz/address/0x82E9b30ad1c10949476F4a10d62EAC83ddBA1213) |
 
-```shell
-$ forge build
+> OrgToken, Treasury, and FutarchyFactoryPoc are deployed dynamically per-organization during `finalizeRaise()` via OrgDeployer.
+
+### Uniswap V3 (Self-Deployed)
+
+| Contract | Address |
+|----------|---------|
+| UniswapV3Factory | [`0x6739FCFDC0c6939939C0e8D55188E8D0D973E617`](https://testnet.snowscan.xyz/address/0x6739FCFDC0c6939939C0e8D55188E8D0D973E617) |
+| NonfungiblePositionManager | [`0xD7144710B6152526FB33699B166B5917a73f67FE`](https://testnet.snowscan.xyz/address/0xD7144710B6152526FB33699B166B5917a73f67FE) |
+| SwapRouter02 | [`0x701067e5f83d71975988BE412Bbd922D806fd29D`](https://testnet.snowscan.xyz/address/0x701067e5f83d71975988BE412Bbd922D806fd29D) |
+| QuoterV2 | [`0xF58D6a43C5DF38D29816640A2E9fC26F73CFAA0d`](https://testnet.snowscan.xyz/address/0xF58D6a43C5DF38D29816640A2E9fC26F73CFAA0d) |
+| TickLens | [`0x4d606ed92695a10f2dCEA1280569377dd6924F7a`](https://testnet.snowscan.xyz/address/0x4d606ed92695a10f2dCEA1280569377dd6924F7a) |
+| UniswapV3Staker | [`0x79Edf619F9A280EAc91436726Fda343EAF394a8C`](https://testnet.snowscan.xyz/address/0x79Edf619F9A280EAc91436726Fda343EAF394a8C) |
+| Multicall2 | [`0xC38684ef087ffAb644870AD1c8b288C90C107fe6`](https://testnet.snowscan.xyz/address/0xC38684ef087ffAb644870AD1c8b288C90C107fe6) |
+| ProxyAdmin | [`0x4aCBA95b62f4dACe54fC760eD439E67071f5b3f6`](https://testnet.snowscan.xyz/address/0x4aCBA95b62f4dACe54fC760eD439E67071f5b3f6) |
+| NFTDescriptor | [`0xd8a53a5E08fe3C51FDbD03fd21B181c802A4214F`](https://testnet.snowscan.xyz/address/0xd8a53a5E08fe3C51FDbD03fd21B181c802A4214F) |
+| NonfungibleTokenPositionDescriptor | [`0x99e71AC36429bbD11Db4686B5fE623480e2C2007`](https://testnet.snowscan.xyz/address/0x99e71AC36429bbD11Db4686B5fE623480e2C2007) |
+| DescriptorProxy | [`0x06d92Bbe12Aa0431b37b231e7AA0586101707Ca3`](https://testnet.snowscan.xyz/address/0x06d92Bbe12Aa0431b37b231e7AA0586101707Ca3) |
+| V3Migrator | [`0x50E3f2B8098Ff5077A689969450EeA97Cc042e05`](https://testnet.snowscan.xyz/address/0x50E3f2B8098Ff5077A689969450EeA97Cc042e05) |
+
+**WAVAX (Fuji):** `0xd00ae08403B9bbb9124bB305C09058E32C39A48c`
+
+## Architecture
+
+```
+CausalOrganizations (singleton)
+  ├── createOrganization()  → stores org info + fundraise params
+  ├── commit()              → investors send USDC (time-weighted accumulator)
+  ├── finalizeRaise()       → founder finalizes, calls OrgDeployer:
+  │     └── OrgDeployer.deployOrg()
+  │           ├── OrgToken       (ERC20 governance token)
+  │           ├── Treasury       (holds USDC, authorizes proposals)
+  │           └── FutarchyFactoryPoc
+  │                 └── createProposal()
+  │                       └── FutarchyProposalPoc
+  │                             ├── 4x ConditionalToken (yesX, noX, yesUsdc, noUsdc)
+  │                             ├── split/merge operations
+  │                             ├── Uniswap V3 AMM pools (YES and NO markets)
+  │                             └── resolve() via 1-hour TWAP oracle
+  ├── forceFinalize()       → anyone can finalize after grace period
+  └── claim()               → investors redeem tokens + USDC refund
 ```
 
-### Test
+## Commands
 
-```shell
-$ forge test
+```sh
+# Build
+forge build
+
+# Test (uses test profile with optimizer disabled)
+FOUNDRY_PROFILE=test forge test -vvv
+
+# Format
+forge fmt
+
+# Deploy to Fuji
+source .env
+forge create src/OrgDeployer.sol:OrgDeployer \
+  --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
+
+forge create src/CausalOrganizations.sol:CausalOrganizations \
+  --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast \
+  --constructor-args <USDC_ADDRESS> <ORG_DEPLOYER_ADDRESS>
+
+# Wire OrgDeployer → CausalOrganizations
+cast send <ORG_DEPLOYER_ADDRESS> "setCampaign(address)" <CAUSAL_ORGANIZATIONS_ADDRESS> \
+  --rpc-url $RPC_URL --private-key $PRIVATE_KEY
+
+# Verify on Snowtrace
+forge verify-contract <ADDRESS> src/<Contract>.sol:<Contract> \
+  --chain-id 43113 \
+  --compiler-version 0.8.26 \
+  --etherscan-api-key $ETHERSCAN_API_KEY \
+  --verifier-url https://api.routescan.io/v2/network/testnet/evm/43113/etherscan
+
+# Deploy Uniswap V3 (from cloned github.com/Uniswap/deploy-v3)
+node dist/index.js \
+  -pk <PRIVATE_KEY_WITH_0x> \
+  -j https://api.avax-test.network/ext/bc/C/rpc \
+  -w9 0xd00ae08403B9bbb9124bB305C09058E32C39A48c \
+  -ncl AVAX \
+  -o <OWNER_ADDRESS> \
+  -c 1
 ```
 
-### Format
+## Environment Variables
 
-```shell
-$ forge fmt
-```
+Copy `.env.example` to `.env`.
 
-### Gas Snapshots
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PRIVATE_KEY` | Yes | — | Deployer private key (with 0x prefix) |
+| `RPC_URL` | No | `https://api.avax-test.network/ext/bc/C/rpc` | Avalanche Fuji RPC |
+| `SNOWTRACE_API_KEY` | No | — | For contract verification on Snowtrace |
+| `ETHERSCAN_API_KEY` | No | — | Alias for Snowtrace verification |
 
-```shell
-$ forge snapshot
-```
+## Dependencies
 
-### Anvil
+- OpenZeppelin v5.6.1 (ERC20, Ownable, ReentrancyGuard, SafeERC20)
+- Uniswap V3 Core v1.0.0 (pools, oracle)
+- Uniswap V3 Periphery v1.3.0 (position manager, liquidity)
 
-```shell
-$ anvil
-```
+## Solidity Version
 
-### Deploy
+`^0.8.24` compiled with Solc 0.8.26, `via_ir = true`, optimizer enabled (200 runs).
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Test profile disables optimizer to avoid `block.timestamp` caching issues in Foundry tests.

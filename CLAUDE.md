@@ -46,6 +46,7 @@ apps/
   contracts/    → Foundry smart contracts
     src/
       CausalOrganizations.sol → Singleton: fundraise creation, commit, finalize, claim
+      OrgDeployer.sol         → Factory: deploys OrgToken + Treasury + FutarchyFactory per org
       OrgToken.sol            → ERC20 governance token with controlled minting
       Treasury.sol            → Per-org treasury holding USDC, authorizes proposals
       futarchy.sol            → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc

@@ -6,7 +6,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {OrgToken} from "./OrgToken.sol";
 import {Treasury} from "./Treasury.sol";
-import {FutarchyFactoryPoc} from "./futarchy.sol";
+import {OrgDeployer} from "./OrgDeployer.sol";
 
 /// @title CausalOrganizations
 /// @notice Singleton contract managing all organizations, fundraises, and token sales.
@@ -62,6 +62,7 @@ contract CausalOrganizations is ReentrancyGuard {
     // ─────────────────────────────────────────────
 
     IERC20 public immutable usdc;
+    OrgDeployer public immutable orgDeployer;
     address public owner;
     uint256 public orgCount;
 
@@ -128,8 +129,9 @@ contract CausalOrganizations is ReentrancyGuard {
     // Constructor
     // ─────────────────────────────────────────────
 
-    constructor(address usdc_) {
+    constructor(address usdc_, address orgDeployer_) {
         usdc = IERC20(usdc_);
+        orgDeployer = OrgDeployer(orgDeployer_);
         owner = msg.sender;
     }
 
@@ -283,9 +285,12 @@ contract CausalOrganizations is ReentrancyGuard {
         OrgInfo storage info = orgInfos[orgId];
         OrgSale storage sale = orgSales[orgId];
 
-        // 1. Deploy OrgToken
-        OrgToken token = new OrgToken(info.name, info.symbol, address(this));
-        orgTokens[orgId] = address(token);
+        // 1. Deploy OrgToken, Treasury, and FutarchyFactoryPoc via OrgDeployer
+        (address tokenAddr, address treasuryAddr, address factoryAddr) =
+            orgDeployer.deployOrg(info.name, info.symbol, address(this), address(usdc), info.founder);
+
+        OrgToken token = OrgToken(tokenAddr);
+        orgTokens[orgId] = tokenAddr;
 
         // Mint sale tokens to this contract (distributed on claim)
         token.mint(address(this), sale.tokensForSale);
@@ -296,20 +301,18 @@ contract CausalOrganizations is ReentrancyGuard {
             token.mint(info.founder, founderAlloc);
         }
 
-        // 2. Deploy Treasury and transfer raised USDC
-        Treasury treasury = new Treasury(address(this), address(usdc), info.founder);
-        orgTreasuries[orgId] = address(treasury);
-        usdc.safeTransfer(address(treasury), finalCap);
-        emit TreasuryDeployed(orgId, address(treasury), finalCap);
+        // 2. Transfer raised USDC to Treasury
+        orgTreasuries[orgId] = treasuryAddr;
+        usdc.safeTransfer(treasuryAddr, finalCap);
+        emit TreasuryDeployed(orgId, treasuryAddr, finalCap);
 
-        // 3. Deploy FutarchyFactoryPoc (owned by founder)
-        FutarchyFactoryPoc factory = new FutarchyFactoryPoc(info.founder, address(treasury));
-        orgFactories[orgId] = address(factory);
-        emit FactoryDeployed(orgId, address(factory));
+        // 3. Record factory
+        orgFactories[orgId] = factoryAddr;
+        emit FactoryDeployed(orgId, factoryAddr);
 
         // 4. Wire: Treasury knows token + factory, token minter → treasury
-        treasury.initialize(address(token), address(factory));
-        token.transferMinter(address(treasury));
+        Treasury(treasuryAddr).initialize(tokenAddr, factoryAddr);
+        token.transferMinter(treasuryAddr);
     }
 
     // ─────────────────────────────────────────────

@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {MockTokenX} from "../src/MockTokenX.sol";
 import {MockUSDC} from "../src/MockUSDC.sol";
+import {OrgDeployer} from "../src/OrgDeployer.sol";
 import {CausalOrganizations} from "../src/CausalOrganizations.sol";
 
 /// @title Deploy — Deploy all Causal contracts to Avalanche Fuji
@@ -22,11 +23,19 @@ contract Deploy is Script {
         MockUSDC usdc = new MockUSDC();
         console.log("MockUSDC deployed:", address(usdc));
 
-        // 2. Deploy CausalOrganizations singleton
-        CausalOrganizations causal = new CausalOrganizations(address(usdc));
+        // 2. Deploy OrgDeployer (handles per-org contract creation)
+        OrgDeployer orgDeployer = new OrgDeployer();
+        console.log("OrgDeployer deployed:", address(orgDeployer));
+
+        // 3. Deploy CausalOrganizations singleton
+        CausalOrganizations causal = new CausalOrganizations(address(usdc), address(orgDeployer));
         console.log("CausalOrganizations deployed:", address(causal));
 
-        // 3. Mint initial test tokens to deployer
+        // 4. Wire OrgDeployer to CausalOrganizations
+        orgDeployer.setCampaign(address(causal));
+        console.log("OrgDeployer campaign set to:", address(causal));
+
+        // 5. Mint initial test tokens to deployer
         tokenX.faucet();
         usdc.faucet();
         console.log("Faucet called for deployer:", deployer);
@@ -37,6 +46,7 @@ contract Deploy is Script {
         console.log("------- DEPLOYMENT SUMMARY -------");
         console.log("MockTokenX:           ", address(tokenX));
         console.log("MockUSDC:             ", address(usdc));
+        console.log("OrgDeployer:          ", address(orgDeployer));
         console.log("CausalOrganizations:  ", address(causal));
         console.log("Deployer:             ", deployer);
     }

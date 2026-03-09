@@ -9,6 +9,7 @@ Fundraise-to-governance platform: CausalOrganizations manages time-weighted toke
 ```
 src/
   CausalOrganizations.sol → Singleton: create org, commit USDC, finalize, claim tokens
+  OrgDeployer.sol         → Factory: deploys OrgToken + Treasury + FutarchyFactory per org
   OrgToken.sol            → ERC20 governance token with controlled minting (minter role)
   Treasury.sol            → Per-org treasury: holds USDC, authorizes proposals, spendFunds/mintTokens
   futarchy.sol            → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
@@ -18,7 +19,7 @@ test/
   CausalOrganizations.t.sol → 23 tests (org creation, commit, finalize, claim, full lifecycle)
   Futarchy.t.sol            → 5 tests (proposal, resolve yes/no, edge cases)
 script/
-  Deploy.s.sol              → Deploys MockTokenX, MockUSDC, CausalOrganizations
+  Deploy.s.sol              → Deploys MockTokenX, MockUSDC, OrgDeployer, CausalOrganizations
 lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V3)
 ```
 
@@ -27,9 +28,15 @@ lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V
 ### CausalOrganizations (singleton)
 - `createOrganization()` — creates a fundraise with name, symbol, description, token economics, sale duration, alpha
 - `commit()` — investors send USDC with time-weighted accumulator
-- `finalizeRaise()` — founder finalizes, auto-deploys OrgToken + Treasury + FutarchyFactoryPoc
+- `finalizeRaise()` — founder finalizes, calls OrgDeployer to deploy OrgToken + Treasury + FutarchyFactoryPoc
 - `forceFinalize()` — force-fail if goal not reached after sale ends
 - `claim()` — investors redeem tokens + refund based on `alpha × (acc/totalAcc) + (1-alpha) × (committed/totalCommitted)`
+
+### OrgDeployer
+- Deploys OrgToken + Treasury + FutarchyFactoryPoc per organization
+- `setCampaign()` — one-time setup linking to CausalOrganizations (resolves circular deployment dependency)
+- `deployOrg()` — called by CausalOrganizations during finalizeRaise, onlyCampaign
+- Extracted from CausalOrganizations to stay under EIP-170 contract size limit (24,576 bytes)
 
 ### OrgToken
 - ERC20 with `minter` role (initially CausalOrganizations, then transferred to Treasury)

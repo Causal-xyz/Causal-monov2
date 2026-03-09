@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {CausalOrganizations} from "src/CausalOrganizations.sol";
+import {OrgDeployer} from "src/OrgDeployer.sol";
 import {OrgToken} from "src/OrgToken.sol";
 import {Treasury} from "src/Treasury.sol";
 import {FutarchyFactoryPoc, FutarchyProposalPoc, IOracle} from "src/futarchy.sol";
@@ -38,7 +39,9 @@ contract CausalOrganizationsTest is Test {
 
     function setUp() public {
         usdc = new MockUSDCForTest();
-        causal = new CausalOrganizations(address(usdc));
+        OrgDeployer deployer = new OrgDeployer();
+        causal = new CausalOrganizations(address(usdc), address(deployer));
+        deployer.setCampaign(address(causal));
 
         // Fund investors
         usdc.mint(investor1, 500_000e6);

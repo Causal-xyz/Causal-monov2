@@ -8,5 +8,11 @@ remappings = [
     '@uniswap/v3-periphery/=lib/v3-periphery/'
 ]
 via_ir = true
+optimizer = true
+optimizer_runs = 200
+
+[profile.test]
+optimizer = false
+code_size_limit = 49152
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
