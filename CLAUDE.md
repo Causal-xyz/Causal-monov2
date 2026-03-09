@@ -5,9 +5,10 @@ Futarchy-based prediction market where proposal outcomes are determined by Unisw
 ## Tech Stack
 
 - **Monorepo**: Turborepo + pnpm workspaces
-- **Frontend**: Next.js 15 (App Router) + Tailwind CSS v4 + shadcn/ui
+- **Frontend**: Next.js 15 (App Router) + Tailwind CSS v4 + shadcn/ui + wagmi/viem
 - **Backend**: Fastify 5 + TypeScript
 - **Smart Contracts**: Foundry (Solidity 0.8.24)
+- **Blockchain**: Avalanche Fuji Testnet (chain ID 43113)
 - **Package Manager**: pnpm 10.4
 - **Node**: v24
 
@@ -16,32 +17,128 @@ Futarchy-based prediction market where proposal outcomes are determined by Unisw
 ```
 apps/
   web/          → Next.js frontend (port 3000)
+    src/
+      app/          → Pages (/, /proposals, /proposals/create, /proposals/[address])
+      components/
+        layout/     → Header, Footer
+        proposal/   → ProposalHeader, SplitMergePanel, MarketOverview, PortfolioPanel, ResolutionPanel, RedemptionPanel
+        ui/         → shadcn/ui components (Button, Card, Badge)
+        ConnectWallet, StatusBadge, TransactionButton, TokenAmount, ThemeProvider
+      hooks/        → useProposalInfo, useConditionalBalances, useSplit, useMerge, useResolve, useRedeem, useApprovalFlow, useAllProposals, useCreateProposal, useTokenBalance, useCountdown
+      lib/          → utils.ts, wagmi.ts
+      providers.tsx → WagmiProvider + QueryClient + ThemeProvider
   api/          → Fastify backend (port 3001)
+    src/
+      app.ts        → Fastify app factory
+      config/env.ts → Environment configuration
+      routes/       → health.ts
+      plugins/      → cors.ts
   contracts/    → Foundry smart contracts
+    src/
+      futarchy.sol   → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
+      MockTokenX.sol → Test ERC20 (CTK, 18 decimals, public mint + faucet)
+      MockUSDC.sol   → Test USDC (mUSDC, 6 decimals, public mint + faucet)
+    script/
+      Deploy.s.sol   → Deployment script for Fuji
+    test/
+      Futarchy.t.sol → Test suite
 packages/
-  shared/             → Shared types, constants, ABIs
-  typescript-config/  → Shared tsconfig bases
+  shared/             → Types, constants, ABIs
+    src/
+      types.ts        → Proposal, Outcome, ConditionalBalances, etc.
+      constants.ts    → Chain config, contract addresses (from env vars), fee tiers
+      abi/            → futarchyFactory, futarchyProposal, erc20 ABI arrays
+  typescript-config/  → Shared tsconfig bases (base, nextjs, node)
   eslint-config/      → Shared ESLint config
 docs/                 → Project documentation
-  futarchy-flow.md    → Detailed futarchy protocol docs (markdown)
-  futarchy-flow.html  → Interactive visual flow diagram (open in browser)
 ```
 
+<!-- AUTO-GENERATED: commands -->
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `pnpm dev` | Start web + api concurrently |
+| `pnpm dev:web` | Start frontend only (port 3000) |
+| `pnpm dev:back` | Start backend only (port 3001) |
 | `pnpm build` | Build all apps |
 | `pnpm test` | Run all tests |
 | `pnpm lint` | Lint all apps |
-| `pnpm typecheck` | TypeScript check |
+| `pnpm typecheck` | TypeScript check all apps |
+| `pnpm format` | Format with Prettier |
+<!-- /AUTO-GENERATED: commands -->
+
+<!-- AUTO-GENERATED: env-vars -->
+## Environment Variables
+
+Each app has a `.env.example` — copy to `.env.local` (web/api) or `.env` (contracts).
+
+### apps/web
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `NEXT_PUBLIC_RPC_URL` | No | `https://api.avax-test.network/ext/bc/C/rpc` | Avalanche Fuji RPC endpoint |
+| `NEXT_PUBLIC_FACTORY_ADDRESS` | Yes | — | FutarchyFactoryPoc deployed address |
+| `NEXT_PUBLIC_MOCK_TOKEN_X_ADDRESS` | Yes | — | MockTokenX deployed address |
+| `NEXT_PUBLIC_MOCK_USDC_ADDRESS` | Yes | — | MockUSDC deployed address |
+| `NEXT_PUBLIC_UNISWAP_V3_FACTORY` | Yes | — | Uniswap V3 Factory address on Fuji |
+| `NEXT_PUBLIC_POSITION_MANAGER` | Yes | — | Uniswap V3 NonfungiblePositionManager |
+| `NEXT_PUBLIC_SWAP_ROUTER` | Yes | — | Uniswap V3 SwapRouter address |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | — | WalletConnect project ID (optional) |
+
+### apps/api
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PORT` | No | `3001` | Server port |
+| `HOST` | No | `0.0.0.0` | Server host |
+| `CORS_ORIGIN` | No | `http://localhost:3000` | Allowed CORS origin |
+| `RPC_URL` | No | `https://api.avax-test.network/ext/bc/C/rpc` | Avalanche Fuji RPC endpoint |
+| `FACTORY_ADDRESS` | Yes | — | FutarchyFactoryPoc deployed address |
+| `MOCK_TOKEN_X_ADDRESS` | Yes | — | MockTokenX deployed address |
+| `MOCK_USDC_ADDRESS` | Yes | — | MockUSDC deployed address |
+
+### apps/contracts
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PRIVATE_KEY` | Yes | — | Deployer private key (no 0x prefix) |
+| `RPC_URL` | No | `https://api.avax-test.network/ext/bc/C/rpc` | Avalanche Fuji RPC |
+| `SNOWTRACE_API_KEY` | No | — | For contract verification on Snowtrace |
+| `ETHERSCAN_API_KEY` | No | — | Alias for Snowtrace verification |
+<!-- /AUTO-GENERATED: env-vars -->
+
+## Smart Contract Deployment
+
+```sh
+cd apps/contracts
+forge script script/Deploy.s.sol --rpc-url https://api.avax-test.network/ext/bc/C/rpc --broadcast
+```
+
+After deployment, set the contract addresses in each app's `.env.local`.
+
+## Web3 Architecture
+
+- **wagmi** — React hooks for Ethereum (wallet connection, contract reads/writes)
+- **viem** — TypeScript Ethereum client (parsing, formatting, types)
+- **@tanstack/react-query** — Caching and state management for contract data
+- ABIs live in `packages/shared/src/abi/` as typed `as const` arrays
+- Contract addresses are read from `NEXT_PUBLIC_*` env vars via `packages/shared/src/constants.ts`
+- All hooks in `apps/web/src/hooks/` wrap wagmi for specific contract interactions
+
+## UI Theme
+
+- Dark theme by default with green accent (#4EDB72)
+- Glass morphism effects (.glass, .glass-card)
+- Gradient text (.gradient-text) and glow buttons (.btn-glow)
+- Theme toggle (dark/light) via ThemeProvider context
+- Animated background with drift animation
 
 ## Conventions
 
 - Workspace packages are scoped under `@causal/*`
 - Shared types go in `packages/shared/src/`
-- Contract ABIs (when generated) go in `packages/shared/src/abi/`
+- Contract ABIs go in `packages/shared/src/abi/`
 - Environment variables use `.env.local` per app (never committed)
 - Immutable data patterns — never mutate objects, return new copies
 - Small files (200-400 lines), small functions (<50 lines)
@@ -61,3 +158,8 @@ docs/                 → Project documentation
 ```sh
 cd apps/web && pnpm dlx shadcn@latest add <component>
 ```
+
+## Important Notes
+
+- Uniswap V3 is NOT deployed on Avalanche Fuji — need to self-deploy using `@uniswap/deploy-v3` or mock for testing
+- Uniswap V3 IS deployed on Avalanche C-Chain mainnet (Factory: `0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD`)

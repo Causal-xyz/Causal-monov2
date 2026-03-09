@@ -33,19 +33,30 @@ src/
 - Build tool: `tsup` (outputs to `dist/`)
 - Dev tool: `tsx watch` for hot reload
 
+<!-- AUTO-GENERATED: commands -->
 ## Commands
 
-```sh
-pnpm dev        # Dev server with hot reload (port 3001)
-pnpm build      # Build with tsup
-pnpm start      # Run production build
-pnpm typecheck  # TypeScript check
-```
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Dev server with hot reload (port 3001) |
+| `pnpm build` | Build with tsup |
+| `pnpm start` | Run production build |
+| `pnpm lint` | ESLint src/ |
+| `pnpm typecheck` | TypeScript check |
+<!-- /AUTO-GENERATED: commands -->
 
+<!-- AUTO-GENERATED: env-vars -->
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Server port |
-| `HOST` | `0.0.0.0` | Server host |
-| `CORS_ORIGIN` | `http://localhost:3000` | Allowed CORS origin |
+Copy `.env.example` to `.env.local`.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PORT` | No | `3001` | Server port |
+| `HOST` | No | `0.0.0.0` | Server host |
+| `CORS_ORIGIN` | No | `http://localhost:3000` | Allowed CORS origin |
+| `RPC_URL` | No | `https://api.avax-test.network/ext/bc/C/rpc` | Avalanche Fuji RPC for contract reads |
+| `FACTORY_ADDRESS` | Yes | — | FutarchyFactoryPoc deployed address |
+| `MOCK_TOKEN_X_ADDRESS` | Yes | — | MockTokenX deployed address |
+| `MOCK_USDC_ADDRESS` | Yes | — | MockUSDC deployed address |
+<!-- /AUTO-GENERATED: env-vars -->

@@ -1,0 +1,65 @@
+export const futarchyFactoryAbi = [
+  {
+    type: "constructor",
+    inputs: [{ name: "owner_", type: "address" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "createProposal",
+    inputs: [
+      { name: "title", type: "string" },
+      { name: "tokenX", type: "address" },
+      { name: "usdc", type: "address" },
+      { name: "resolutionTimestamp", type: "uint256" },
+      { name: "transferToken", type: "address" },
+      { name: "recipient", type: "address" },
+      { name: "transferAmount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "proposalCount",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "proposals",
+    inputs: [{ name: "", type: "uint256" }],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "owner",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "transferOwnership",
+    inputs: [{ name: "newOwner", type: "address" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "renounceOwnership",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "event",
+    name: "OwnershipTransferred",
+    inputs: [
+      { name: "previousOwner", type: "address", indexed: true },
+      { name: "newOwner", type: "address", indexed: true },
+    ],
+  },
+] as const;
