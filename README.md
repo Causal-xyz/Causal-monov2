@@ -1,4 +1,5 @@
 CAUSAL
+
 CAUSAL is a futarchy-based governance protocol built on the Avalanche C-chain network.It allows organizations to raise capital, manage treasuries, and execute governance decisions using prediction markets.
 Instead of traditional voting, CAUSAL uses markets to determine whether a proposal should be executed. Traders buy and sell conditional assets that represent the expected outcome of a proposal. The protocol then executes the outcome that the market predicts will maximize value.
 
