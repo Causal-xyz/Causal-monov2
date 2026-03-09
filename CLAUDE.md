@@ -159,7 +159,20 @@ After deployment, set the contract addresses in each app's `.env.local`.
 cd apps/web && pnpm dlx shadcn@latest add <component>
 ```
 
-## Important Notes
+## Uniswap V3 on Avalanche
 
-- Uniswap V3 is NOT deployed on Avalanche Fuji — need to self-deploy using `@uniswap/deploy-v3` or mock for testing
-- Uniswap V3 IS deployed on Avalanche C-Chain mainnet (Factory: `0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD`)
+### Mainnet (C-Chain 43114) — Official deployment
+
+| Contract | Address |
+|----------|---------|
+| UniswapV3Factory | `0x740b1c1de25031C31FF4fC9A62f554A55cdC1baD` |
+| SwapRouter02 | `0xbb00FF08d01D300023C629E8fFfFcb65A5a578cE` |
+| NonfungiblePositionManager | `0x655C406EBFa14EE2006250925e54ec43AD184f8B` |
+| QuoterV2 | `0xbe0F5544EC67e9B3b2D979aaA43f18Fd87E6257F` |
+| UniversalRouter | `0x94b75331ae8d42c1b61065089b7d48fe14aa73b7` |
+| Permit2 | `0x000000000022D473030F116dDEE9F6B43aC78BA3` |
+| WAVAX | `0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7` |
+
+### Fuji Testnet (43113) — No official deployment
+
+Uniswap V3 is **not** on Fuji. Self-deploy with `npx @uniswap/deploy-v3` (GPL-2.0 since April 2023). See README.md for full instructions.
