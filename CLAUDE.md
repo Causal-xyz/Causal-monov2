@@ -23,6 +23,8 @@ packages/
   typescript-config/  → Shared tsconfig bases
   eslint-config/      → Shared ESLint config
 docs/                 → Project documentation
+  futarchy-flow.md    → Detailed futarchy protocol docs (markdown)
+  futarchy-flow.html  → Interactive visual flow diagram (open in browser)
 ```
 
 ## Commands
@@ -43,6 +45,11 @@ docs/                 → Project documentation
 - Environment variables use `.env.local` per app (never committed)
 - Immutable data patterns — never mutate objects, return new copies
 - Small files (200-400 lines), small functions (<50 lines)
+
+## Documentation
+
+- [Futarchy Protocol Flow (markdown)](docs/futarchy-flow.md) — complete lifecycle, token flows, TWAP oracle, access control, errors/events
+- [Futarchy Protocol Flow (visual)](docs/futarchy-flow.html) — interactive HTML page with diagrams, open in browser
 
 ## Git
 

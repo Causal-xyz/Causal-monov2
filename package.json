@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=@causal/web",
+    "dev:back": "turbo dev --filter=@causal/api",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
