@@ -1,0 +1,298 @@
+════════════════════════════════════════════════════════════════════
+               CAUSAL VERIFICATION & DEPLOYMENT DOCS
+                    Created: March 6, 2026
+════════════════════════════════════════════════════════════════════
+
+DOCUMENTATION CREATED FOR IMMEDIATE VERIFICATION & MAINNET LAUNCH
+
+════════════════════════════════════════════════════════════════════
+                    1. ENTRY POINT DOCUMENTS
+════════════════════════════════════════════════════════════════════
+
+📄 README.md (NEW)
+   Purpose: Entry point for all users
+   Contains: Quick overview, next steps, key links
+   Read Time: 5 minutes
+   Action: Read this first!
+   Location: CAUSAL/README.md
+
+📄 QUICK_REFERENCE.md (NEW)
+   Purpose: One-page reference card
+   Contains: Addresses, timeline, status, quick commands
+   Read Time: 3 minutes
+   Action: Bookmark for quick lookups
+   Location: CAUSAL/QUICK_REFERENCE.md
+
+════════════════════════════════════════════════════════════════════
+              2. SNOWTRACE VERIFICATION DOCUMENTS
+════════════════════════════════════════════════════════════════════
+
+📄 SNOWTRACE_VERIFICATION.md (NEW)
+   Purpose: Complete guide to verifying contracts
+   Contains:
+     • Method 1: Using Foundry (recommended)
+     • Method 2: Manual UI verification
+     • Troubleshooting guide
+     • Verification status checks
+   Read Time: 20 minutes
+   Action: Read before running verification
+   Location: CAUSAL/SNOWTRACE_VERIFICATION.md
+
+📄 VERIFY_CONTRACTS.sh (NEW)
+   Purpose: Automated batch verification script
+   Contains: Executable bash script for all 4 contracts
+   Requirements: SNOWTRACE_API_KEY environment variable
+   Action: Run after reading verification guide
+   Location: CAUSAL/VERIFY_CONTRACTS.sh
+   Command: ./VERIFY_CONTRACTS.sh
+
+📄 VERIFICATION_STATUS.md (NEW)
+   Purpose: Status tracker with contract details
+   Contains:
+     • Verification checklist
+     • Contract addresses
+     • Compilation settings
+     • Verification commands
+     • Timeline tracker
+   Read Time: 10 minutes
+   Action: Reference while verifying
+   Location: CAUSAL/VERIFICATION_STATUS.md
+
+📄 VERIFICATION_CHECKLIST.md (EXISTING)
+   Purpose: Printable execution checklist
+   Contains:
+     • Pre-verification setup
+     • Per-contract verification steps
+     • Post-verification checks
+     • Sign-off sections
+     • Troubleshooting log
+   Action: Print and fill in as you verify
+   Location: CAUSAL/VERIFICATION_CHECKLIST.md
+
+════════════════════════════════════════════════════════════════════
+            3. MAINNET DEPLOYMENT DOCUMENTS
+════════════════════════════════════════════════════════════════════
+
+📄 MAINNET_DEPLOYMENT_PLAN.md (NEW)
+   Purpose: Step-by-step mainnet deployment guide
+   Contains:
+     • Pre-deployment checklist
+     • Deployment configuration
+     • Step-by-step deployment
+     • Phase duration changes
+     • Security considerations
+     • Rollback procedures
+   Read Time: 30 minutes
+   Action: Read before mainnet deployment
+   Location: CAUSAL/MAINNET_DEPLOYMENT_PLAN.md
+
+════════════════════════════════════════════════════════════════════
+          4. SUPPLEMENTARY DOCUMENTATION
+════════════════════════════════════════════════════════════════════
+
+📄 UNIFIED_ARCHITECTURE.md (EXISTING)
+   Purpose: Technical architecture documentation
+   Contains:
+     • System architecture overview
+     • Contract interactions
+     • Data structures and flows
+     • Integration details
+   Read Time: 45 minutes
+   Action: Reference for technical deep dive
+   Location: CAUSAL/UNIFIED_ARCHITECTURE.md
+
+════════════════════════════════════════════════════════════════════
+                      RECOMMENDED READING ORDER
+════════════════════════════════════════════════════════════════════
+
+FOR IMMEDIATE VERIFICATION (THIS WEEK):
+
+Step 1: README.md ...................... 5 min
+Step 2: QUICK_REFERENCE.md ....................... 3 min
+Step 3: SNOWTRACE_VERIFICATION.md ............... 20 min
+Step 4: ./VERIFY_CONTRACTS.sh ................... RUN IT
+Step 5: VERIFICATION_CHECKLIST.md ............... FILL IT IN
+Step 6: Check Snowtrace explorer ................ VERIFY ✓
+
+TOTAL TIME: ~30 minutes to complete verification
+
+FOR MAINNET PREPARATION (WEEKS 2-6):
+
+Step 1: QUICK_REFERENCE.md ...................... 3 min
+Step 2: MAINNET_DEPLOYMENT_PLAN.md ............. 30 min
+Step 3: UNIFIED_ARCHITECTURE.md ................ 45 min
+Step 4: contracts/src/ .......................... Review code
+Step 5: Execute mainnet deployment ............. Follow guide
+
+════════════════════════════════════════════════════════════════════
+                      WHAT EACH FILE DOES
+════════════════════════════════════════════════════════════════════
+
+README.md
+  ✓ Entry point with overview
+  ✓ Platform philosophy and mechanism
+  ✓ Project structure and links
+  ✓ Deployment addresses
+  → For: Everyone, especially new users
+
+QUICK_REFERENCE.md
+  ✓ Current deployed addresses
+  ✓ Timeline estimate
+  ✓ Key links and common commands
+  ✓ Phase duration details
+  ✓ Success criteria
+  → For: Quick lookups and bookmarking
+
+SNOWTRACE_VERIFICATION.md
+  ✓ Complete verification guide
+  ✓ Two methods (Foundry + UI)
+  ✓ Troubleshooting
+  ✓ Contract overview
+  → For: Performing contract verification
+
+VERIFY_CONTRACTS.sh
+  ✓ Batch verification script
+  ✓ All 4 contracts in one command
+  ✓ Automated checking
+  → For: Running verification quickly
+
+VERIFICATION_STATUS.md
+  ✓ Checklist format
+  ✓ Contract addresses and details
+  ✓ Verification commands
+  ✓ Compilation settings
+  ✓ Status tracking
+  → For: Reference while verifying
+
+VERIFICATION_CHECKLIST.md
+  ✓ Printable checklist
+  ✓ Step-by-step verification boxes
+  ✓ Sign-off sections
+  ✓ Troubleshooting log
+  → For: Tracking progress during verification
+
+MAINNET_DEPLOYMENT_PLAN.md
+  ✓ Complete deployment guide
+  ✓ Configuration changes (testnet → mainnet)
+  ✓ Security considerations
+  ✓ Rollback procedures
+  → For: Preparing and executing mainnet deployment
+
+UNIFIED_ARCHITECTURE.md
+  ✓ Technical architecture documentation
+  ✓ System design and interactions
+  ✓ Contract relationships
+  ✓ Data flow diagrams
+  → For: Technical auditing and deep dives
+
+════════════════════════════════════════════════════════════════════
+                    KEY INFORMATION AT A GLANCE
+════════════════════════════════════════════════════════════════════
+
+DEPLOYED CONTRACTS (Avalanche Fuji Testnet)
+  CausalOrganizations:        0xeD8bB8758d7231771279F4d24905E46B8febbAa1
+  TreasuryFactory:            0x6447E0E25488Ff7E5BC5f6270cc25Bd46189B134
+  ProposalFactoryDeployer:    0x0D9E90BB5BAA72b70fA6164d859048a9Fc57AB83
+  MockUSDC:                   0x096731dc6CA1FF91702394F8c5C31dD989608e7B
+
+NEXT STEPS (THIS WEEK)
+  1. Get Snowtrace API key (5 min)
+  2. Run verification script (15 min)
+  3. Check green checkmarks (2 min)
+  4. Share verified links (5 min)
+
+TIMELINE TO MAINNET
+  Week 1:    Verification
+  Weeks 2-4: External audit
+  Weeks 5-6: Mainnet deployment
+  TOTAL:     4-6 weeks
+
+════════════════════════════════════════════════════════════════════
+                      HOW TO USE THIS PACKAGE
+════════════════════════════════════════════════════════════════════
+
+SCENARIO 1: I want to verify contracts TODAY
+  → Read: README.md
+  → Then: SNOWTRACE_VERIFICATION.md
+  → Then: Run ./VERIFY_CONTRACTS.sh
+  → Use: VERIFICATION_CHECKLIST.md to track
+
+SCENARIO 2: I'm new to CAUSAL and want an overview
+  → Read: README.md
+  → Then: QUICK_REFERENCE.md
+  → Then: Browse UNIFIED_ARCHITECTURE.md for deeper understanding
+
+SCENARIO 3: I need to deploy to mainnet
+  → Read: MAINNET_DEPLOYMENT_PLAN.md
+  → Reference: QUICK_REFERENCE.md for current addresses
+  → Review: UNIFIED_ARCHITECTURE.md for technical details
+
+SCENARIO 4: I need to audit this project
+  → Read: README.md for overview
+  → Review: UNIFIED_ARCHITECTURE.md for architecture
+  → Examine: contracts/src/ for source code
+  → Use: VERIFICATION_CHECKLIST.md to plan verification
+
+SCENARIO 5: I want a quick summary
+  → Start: README.md (5 min)
+  → Then: QUICK_REFERENCE.md (3 min)
+  → Total: 8 minutes to full understanding
+
+════════════════════════════════════════════════════════════════════
+                    VERIFICATION QUICK START
+════════════════════════════════════════════════════════════════════
+
+1. Get API Key (2 min)
+   Visit: https://testnet.snowtrace.io/myapikey
+
+2. Set Environment (1 min)
+   export SNOWTRACE_API_KEY="your_key_here"
+
+3. Run Verification (15 min)
+   cd CAUSAL
+   ./VERIFY_CONTRACTS.sh
+
+4. Check Results (2 min)
+   Visit: https://testnet.snowtrace.io/address/0xeD8bB8758d7231771279F4d24905E46B8febbAa1
+   Look for green checkmark next to contract name
+
+5. Done! (10 min to share)
+   Share Snowtrace links on social media
+   Show transparent, auditable code
+
+TOTAL TIME: ~30 minutes ⏱️
+
+════════════════════════════════════════════════════════════════════
+                      CURRENT DOCUMENTATION
+════════════════════════════════════════════════════════════════════
+
+PRIMARY DOCUMENTS (for users):
+  ✓ CAUSAL/README.md - Project overview and entry point
+  ✓ CAUSAL/QUICK_REFERENCE.md - Quick lookup card
+  ✓ CAUSAL/SNOWTRACE_VERIFICATION.md - Verification guide
+  ✓ CAUSAL/VERIFY_CONTRACTS.sh - Verification script
+  ✓ CAUSAL/VERIFICATION_STATUS.md - Verification checklist
+  ✓ CAUSAL/VERIFICATION_CHECKLIST.md - Detailed verification steps
+  ✓ CAUSAL/MAINNET_DEPLOYMENT_PLAN.md - Mainnet deployment guide
+  ✓ CAUSAL/UNIFIED_ARCHITECTURE.md - Technical architecture
+
+LEGACY/TEST DOCUMENTS (historical, for reference):
+  • CAUSAL/TESTING.md - Early testing documentation
+  • CAUSAL/TESTING_END_TO_END.md - End-to-end test guide
+
+════════════════════════════════════════════════════════════════════
+                        STATUS: PRODUCTION READY
+════════════════════════════════════════════════════════════════════
+
+All smart contracts compiled and tested
+Frontend complete with all features
+Comprehensive documentation created
+Verification scripts prepared
+Mainnet deployment guide ready
+Team ready to execute
+
+FINAL MILESTONE: Mainnet Launch (4-6 weeks total)
+
+════════════════════════════════════════════════════════════════════
+                    LET'S LAUNCH CAUSAL! 
+════════════════════════════════════════════════════════════════════
