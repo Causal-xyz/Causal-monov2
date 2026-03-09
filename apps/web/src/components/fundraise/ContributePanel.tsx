@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Loader2 } from "lucide-react";
@@ -50,12 +50,20 @@ export function ContributePanel({
     requestApproval,
     isApprovePending,
     isApproveConfirming,
+    isApproveConfirmed,
   } = useApprovalFlow(
     CONTRACTS.mockUsdc,
     CONTRACTS.causalOrganizations,
     address,
     parsedAmount,
   );
+
+  // Auto-commit after approval confirms
+  useEffect(() => {
+    if (isApproveConfirmed && !needsApproval && parsedAmount > 0n) {
+      commit(orgId, parsedAmount);
+    }
+  }, [isApproveConfirmed, needsApproval, parsedAmount, commit, orgId]);
 
   const isExpired = saleEnd > 0 && Date.now() / 1000 > saleEnd;
   const canCommit =

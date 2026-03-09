@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { erc20Abi } from "@causal/shared";
 import { maxUint256 } from "viem";
@@ -26,6 +27,13 @@ export function useApprovalFlow(
 
   const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed } =
     useWaitForTransactionReceipt({ hash: approveHash });
+
+  // Refetch allowance after approval tx confirms
+  useEffect(() => {
+    if (isApproveConfirmed) {
+      refetchAllowance();
+    }
+  }, [isApproveConfirmed, refetchAllowance]);
 
   const currentAllowance = (allowance as bigint) ?? 0n;
   const needsApproval = currentAllowance < requiredAmount;
