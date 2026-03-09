@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Loader2, Shield } from "lucide-react";
@@ -12,6 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useFinalizeRaise, useForceFinalize } from "@/hooks/useFinalize";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 
 interface FinalizePanelProps {
   readonly orgId: number;
@@ -41,6 +43,7 @@ export function FinalizePanel({
 
   const {
     finalizeRaise,
+    hash: finalizeHash,
     isPending: isFinalizePending,
     isConfirming: isFinalizeConfirming,
     isSuccess: isFinalizeSuccess,
@@ -49,6 +52,7 @@ export function FinalizePanel({
 
   const {
     forceFinalize,
+    hash: forceHash,
     isPending: isForcePending,
     isConfirming: isForceConfirming,
     isSuccess: isForceSuccess,
@@ -60,11 +64,25 @@ export function FinalizePanel({
   const isExpired = saleEnd > 0 && Date.now() / 1000 > saleEnd;
   const goalReached = usdcRaised >= fundingGoal;
 
-  useEffect(() => {
-    if (isFinalizeSuccess || isForceSuccess) {
-      onSuccess?.();
-    }
-  }, [isFinalizeSuccess, isForceSuccess, onSuccess]);
+  // Fire onSuccess exactly once per tx
+  useOnceOnSuccess(isFinalizeSuccess, onSuccess, finalizeHash);
+  useOnceOnSuccess(isForceSuccess, onSuccess, forceHash);
+
+  // Toast notifications
+  useTransactionToast({
+    hash: finalizeHash,
+    isConfirming: isFinalizeConfirming,
+    isSuccess: isFinalizeSuccess,
+    error: finalizeError,
+    labels: { success: "Fundraise finalized!", pending: "Finalizing raise..." },
+  });
+  useTransactionToast({
+    hash: forceHash,
+    isConfirming: isForceConfirming,
+    isSuccess: isForceSuccess,
+    error: forceError,
+    labels: { success: "Force finalized!", pending: "Force finalizing..." },
+  });
 
   if (finalized || !isFounder) return null;
 

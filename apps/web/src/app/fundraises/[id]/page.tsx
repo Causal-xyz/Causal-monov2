@@ -344,6 +344,19 @@ export default function FundraiseDetailPage({
                   </div>
                 )}
 
+                {factoryAddress && (
+                  <Link
+                    href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}`}
+                  >
+                    <Button
+                      className="btn-glow mt-2 w-full border-0 text-primary-foreground"
+                    >
+                      Create Proposal
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+
                 <Link href="/proposals">
                   <Button
                     variant="outline"

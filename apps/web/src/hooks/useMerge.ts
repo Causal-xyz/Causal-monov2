@@ -4,8 +4,9 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { futarchyProposalAbi } from "@causal/shared";
 
 export function useMergeX(proposalAddress: `0x${string}`) {
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({ hash });
+  const error = writeError ?? receiptError;
 
   function merge(amount: bigint, receiver: `0x${string}`) {
     writeContract({
@@ -20,8 +21,9 @@ export function useMergeX(proposalAddress: `0x${string}`) {
 }
 
 export function useMergeUsdc(proposalAddress: `0x${string}`) {
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({ hash });
+  const error = writeError ?? receiptError;
 
   function merge(amount: bigint, receiver: `0x${string}`) {
     writeContract({

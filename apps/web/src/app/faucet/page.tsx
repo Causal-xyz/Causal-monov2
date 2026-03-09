@@ -14,7 +14,7 @@ import { useTokenBalance } from "@/hooks/useTokenBalance";
 export default function FaucetPage() {
   const { address, isConnected } = useAccount();
   const { balance, decimals, symbol } = useTokenBalance(CONTRACTS.mockUsdc, address);
-  const { requestFaucet, hash, isPending, error } = useFaucet();
+  const { requestFaucet, hash, isPending, isConfirming, isSuccess, error } = useFaucet();
 
   const formattedBalance = Number(formatUnits(balance, decimals)).toLocaleString(undefined, {
     maximumFractionDigits: 2,
@@ -55,8 +55,10 @@ export default function FaucetPage() {
               <TransactionButton
                 hash={hash}
                 isPending={isPending}
+                error={error}
                 onClick={requestFaucet}
                 className="btn-glow w-full border-0 text-primary-foreground"
+                toastLabels={{ success: "10,000 mUSDC received!", pending: "Requesting mUSDC..." }}
               >
                 <Coins className="mr-2 h-4 w-4" />
                 Get 10,000 mUSDC

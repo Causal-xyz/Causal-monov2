@@ -4,10 +4,11 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { causalOrganizationsAbi, CONTRACTS } from "@causal/shared";
 
 export function useFinalizeRaise() {
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
   });
+  const error = writeError ?? receiptError;
 
   function finalizeRaise(orgId: number, finalCap: bigint) {
     writeContract({
@@ -22,10 +23,11 @@ export function useFinalizeRaise() {
 }
 
 export function useForceFinalize() {
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({
     hash,
   });
+  const error = writeError ?? receiptError;
 
   function forceFinalize(orgId: number) {
     writeContract({

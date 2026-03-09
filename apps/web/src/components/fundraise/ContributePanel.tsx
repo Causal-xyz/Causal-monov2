@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Loader2 } from "lucide-react";
@@ -15,6 +15,8 @@ import { CONTRACTS } from "@causal/shared";
 import { useCommit } from "@/hooks/useCommit";
 import { useApprovalFlow } from "@/hooks/useApprovalFlow";
 import { useTokenBalance } from "@/hooks/useTokenBalance";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 
 interface ContributePanelProps {
   readonly orgId: number;
@@ -33,7 +35,8 @@ export function ContributePanel({
 }: ContributePanelProps) {
   const { address, isConnected } = useAccount();
   const [amount, setAmount] = useState("");
-  const { commit, isPending, isConfirming, isSuccess, error } = useCommit();
+  const { commit, hash, isPending, isConfirming, isSuccess, error } =
+    useCommit();
 
   const parsedAmount =
     amount && parseFloat(amount) > 0
@@ -51,6 +54,7 @@ export function ContributePanel({
     isApprovePending,
     isApproveConfirming,
     isApproveConfirmed,
+    approveHash,
   } = useApprovalFlow(
     CONTRACTS.mockUsdc,
     CONTRACTS.causalOrganizations,
@@ -58,12 +62,19 @@ export function ContributePanel({
     parsedAmount,
   );
 
-  // Auto-commit after approval confirms
+  // Auto-commit after approval confirms — guarded to fire once
+  const autoCommittedRef = useRef(false);
   useEffect(() => {
-    if (isApproveConfirmed && !needsApproval && parsedAmount > 0n) {
+    if (isApproveConfirmed && !needsApproval && parsedAmount > 0n && !autoCommittedRef.current) {
+      autoCommittedRef.current = true;
       commit(orgId, parsedAmount);
     }
   }, [isApproveConfirmed, needsApproval, parsedAmount, commit, orgId]);
+
+  // Reset guard when approval hash changes (new approval)
+  useEffect(() => {
+    autoCommittedRef.current = false;
+  }, [approveHash]);
 
   const isExpired = saleEnd > 0 && Date.now() / 1000 > saleEnd;
   const canCommit =
@@ -84,11 +95,17 @@ export function ContributePanel({
     }
   }, [usdcBalance]);
 
-  useEffect(() => {
-    if (isSuccess) {
-      onSuccess?.();
-    }
-  }, [isSuccess, onSuccess]);
+  // Fire onSuccess exactly once per tx
+  useOnceOnSuccess(isSuccess, onSuccess, hash);
+
+  // Toast notifications
+  useTransactionToast({
+    hash,
+    isConfirming,
+    isSuccess,
+    error,
+    labels: { success: "Contribution confirmed!", pending: "Contributing USDC..." },
+  });
 
   const isProcessing =
     isPending || isConfirming || isApprovePending || isApproveConfirming;

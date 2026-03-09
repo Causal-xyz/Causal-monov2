@@ -5,27 +5,37 @@ import { useWaitForTransactionReceipt } from "wagmi";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNetworkGuard } from "@/hooks/useNetworkGuard";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 
 type TxStatus = "idle" | "pending" | "confirming" | "success" | "error";
 
 interface TransactionButtonProps {
   readonly hash: `0x${string}` | undefined;
   readonly isPending: boolean;
+  readonly error?: Error | null;
   readonly onClick: () => void;
   readonly disabled?: boolean;
   readonly children: ReactNode;
   readonly className?: string;
   readonly onSuccess?: () => void;
+  readonly toastLabels?: {
+    readonly pending?: string;
+    readonly success?: string;
+    readonly error?: string;
+  };
 }
 
 export function TransactionButton({
   hash,
   isPending,
+  error,
   onClick,
   disabled = false,
   children,
   className,
   onSuccess,
+  toastLabels,
 }: TransactionButtonProps) {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
@@ -33,9 +43,17 @@ export function TransactionButton({
   const { isWrongNetwork, isSwitching, switchToFuji, expectedChainName } =
     useNetworkGuard();
 
-  if (isSuccess && onSuccess) {
-    onSuccess();
-  }
+  // Fire onSuccess exactly once per hash
+  useOnceOnSuccess(isSuccess, onSuccess, hash);
+
+  // Show toast notifications
+  useTransactionToast({
+    hash,
+    isConfirming,
+    isSuccess,
+    error: error ?? null,
+    labels: toastLabels,
+  });
 
   if (isWrongNetwork) {
     return (

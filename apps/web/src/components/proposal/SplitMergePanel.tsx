@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { parseUnits, formatUnits } from "viem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { useApprovalFlow } from "@/hooks/useApprovalFlow";
 import { useSplitX, useSplitUsdc } from "@/hooks/useSplit";
 import { useMergeX, useMergeUsdc } from "@/hooks/useMerge";
 import { useConditionalBalances } from "@/hooks/useConditionalBalances";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 import { Loader2, ArrowDownUp } from "lucide-react";
 
 type Tab = "split" | "merge";
@@ -57,22 +59,48 @@ export function SplitMergePanel({
     activeMerge.isPending || activeMerge.isConfirming ||
     approval.isApprovePending || approval.isApproveConfirming;
 
-  // Refetch on success
-  useEffect(() => {
-    if (activeSplit.isSuccess || activeMerge.isSuccess) {
-      setAmount("");
-      refetchBalance();
-      refetchCond();
-      onSuccess();
-    }
-  }, [activeSplit.isSuccess, activeMerge.isSuccess]);
+  // Refetch on success — guarded
+  const handleSplitMergeSuccess = () => {
+    setAmount("");
+    refetchBalance();
+    refetchCond();
+    onSuccess();
+  };
 
-  // Refetch allowance after approval
+  useOnceOnSuccess(activeSplit.isSuccess, handleSplitMergeSuccess, activeSplit.hash);
+  useOnceOnSuccess(activeMerge.isSuccess, handleSplitMergeSuccess, activeMerge.hash);
+
+  // Toast for split
+  useTransactionToast({
+    hash: activeSplit.hash,
+    isConfirming: activeSplit.isConfirming,
+    isSuccess: activeSplit.isSuccess,
+    error: activeSplit.error,
+    labels: { success: `Split ${symbol} confirmed!`, pending: `Splitting ${symbol}...` },
+  });
+
+  // Toast for merge
+  useTransactionToast({
+    hash: activeMerge.hash,
+    isConfirming: activeMerge.isConfirming,
+    isSuccess: activeMerge.isSuccess,
+    error: activeMerge.error,
+    labels: { success: `Merge ${symbol} confirmed!`, pending: `Merging ${symbol}...` },
+  });
+
+  // Refetch allowance after approval — guarded
+  const approvalRefetchedRef = useRef(false);
   useEffect(() => {
-    if (approval.isApproveConfirmed) {
+    if (approval.isApproveConfirmed && !approvalRefetchedRef.current) {
+      approvalRefetchedRef.current = true;
       approval.refetchAllowance();
     }
-  }, [approval.isApproveConfirmed]);
+  }, [approval.isApproveConfirmed, approval.refetchAllowance]);
+
+  // Reset guard when approval hash changes
+  useEffect(() => {
+    approvalRefetchedRef.current = false;
+  }, [approval.approveHash]);
 
   // Merge max: minimum of yes/no balances for the chosen token type
   const mergeMaxBalance = tokenType === "tokenX"

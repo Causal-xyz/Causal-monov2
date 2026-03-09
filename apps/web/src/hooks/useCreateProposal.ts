@@ -1,11 +1,12 @@
 "use client";
 
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { futarchyFactoryAbi, CONTRACTS } from "@causal/shared";
+import { futarchyFactoryAbi } from "@causal/shared";
 
-export function useCreateProposal() {
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+export function useCreateProposal(factoryAddress: `0x${string}`) {
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess, error: receiptError } = useWaitForTransactionReceipt({ hash });
+  const error = writeError ?? receiptError;
 
   function createProposal(params: {
     title: string;
@@ -20,7 +21,7 @@ export function useCreateProposal() {
     twapWindow?: number;
   }) {
     writeContract({
-      address: CONTRACTS.factory,
+      address: factoryAddress,
       abi: futarchyFactoryAbi,
       functionName: "createProposal",
       args: [

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useResolve } from "@/hooks/useResolve";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 import { Gavel, Loader2 } from "lucide-react";
 
 interface ResolutionPanelProps {
@@ -12,14 +13,18 @@ interface ResolutionPanelProps {
 }
 
 export function ResolutionPanel({ proposalAddress, onSuccess }: ResolutionPanelProps) {
-  const { resolve, isPending, isConfirming, isSuccess, error } =
+  const { resolve, hash, isPending, isConfirming, isSuccess, error } =
     useResolve(proposalAddress);
 
-  useEffect(() => {
-    if (isSuccess) {
-      onSuccess();
-    }
-  }, [isSuccess]);
+  useOnceOnSuccess(isSuccess, onSuccess, hash);
+
+  useTransactionToast({
+    hash,
+    isConfirming,
+    isSuccess,
+    error,
+    labels: { success: "Proposal resolved!", pending: "Resolving proposal..." },
+  });
 
   return (
     <Card className="glass-card rounded-xl border-causal/30">

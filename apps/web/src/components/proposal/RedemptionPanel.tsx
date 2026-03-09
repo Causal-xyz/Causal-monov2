@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { parseUnits, formatUnits } from "viem";
+import { formatUnits } from "viem";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useConditionalBalances } from "@/hooks/useConditionalBalances";
 import { useRedeemX, useRedeemUsdc } from "@/hooks/useRedeem";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 import { Trophy, Loader2 } from "lucide-react";
 import type { Outcome } from "@causal/shared";
 
@@ -30,12 +31,29 @@ export function RedemptionPanel({
   const winningX = outcome === "Yes" ? balances.yesX : balances.noX;
   const winningUsdc = outcome === "Yes" ? balances.yesUsdc : balances.noUsdc;
 
-  useEffect(() => {
-    if (redeemX.isSuccess || redeemUsdc.isSuccess) {
-      refetchCond();
-      onSuccess();
-    }
-  }, [redeemX.isSuccess, redeemUsdc.isSuccess]);
+  const handleRedeemSuccess = () => {
+    refetchCond();
+    onSuccess();
+  };
+
+  useOnceOnSuccess(redeemX.isSuccess, handleRedeemSuccess, redeemX.hash);
+  useOnceOnSuccess(redeemUsdc.isSuccess, handleRedeemSuccess, redeemUsdc.hash);
+
+  useTransactionToast({
+    hash: redeemX.hash,
+    isConfirming: redeemX.isConfirming,
+    isSuccess: redeemX.isSuccess,
+    error: redeemX.error,
+    labels: { success: "Token X redeemed!", pending: "Redeeming Token X..." },
+  });
+
+  useTransactionToast({
+    hash: redeemUsdc.hash,
+    isConfirming: redeemUsdc.isConfirming,
+    isSuccess: redeemUsdc.isSuccess,
+    error: redeemUsdc.error,
+    labels: { success: "USDC redeemed!", pending: "Redeeming USDC..." },
+  });
 
   if (!userAddress) {
     return (

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { parseUnits } from "viem";
+import { useRouter, useSearchParams } from "next/navigation";
+import { parseUnits, isAddress } from "viem";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CONTRACTS } from "@causal/shared";
 import { useCreateProposal } from "@/hooks/useCreateProposal";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 import { Loader2 } from "lucide-react";
 
 interface FormState {
@@ -22,24 +23,40 @@ interface FormState {
   readonly transferAmount: string;
 }
 
-const INITIAL_FORM: FormState = {
-  title: "",
-  tokenX: CONTRACTS.mockTokenX || "",
-  usdc: CONTRACTS.mockUsdc || "",
-  resolutionDate: "",
-  resolutionTime: "",
-  twapWindowMinutes: "60",
-  transferToken: "",
-  recipient: "",
-  transferAmount: "0",
-};
+function buildInitialForm(searchParams: URLSearchParams): FormState {
+  const tokenXParam = searchParams.get("tokenX") ?? "";
+  return {
+    title: "",
+    tokenX: isAddress(tokenXParam) ? tokenXParam : (CONTRACTS.mockTokenX || ""),
+    usdc: CONTRACTS.mockUsdc || "",
+    resolutionDate: "",
+    resolutionTime: "",
+    twapWindowMinutes: "60",
+    transferToken: isAddress(tokenXParam) ? tokenXParam : "",
+    recipient: "",
+    transferAmount: "0",
+  };
+}
 
 export default function CreateProposalPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const factoryParam = searchParams.get("factory") ?? "";
+  const factoryAddress = (isAddress(factoryParam) ? factoryParam : CONTRACTS.factory) as `0x${string}`;
+  const hasValidFactory = isAddress(factoryAddress);
+
   const { address, isConnected } = useAccount();
   const { createProposal, isPending, isConfirming, isSuccess, hash, error } =
-    useCreateProposal();
-  const [form, setForm] = useState<FormState>(INITIAL_FORM);
+    useCreateProposal(factoryAddress);
+  const [form, setForm] = useState<FormState>(() => buildInitialForm(searchParams));
+
+  useTransactionToast({
+    hash,
+    isConfirming,
+    isSuccess,
+    error,
+    labels: { success: "Proposal created!", pending: "Deploying proposal..." },
+  });
 
   const updateField = useCallback(
     (field: keyof FormState, value: string) => {
@@ -94,6 +111,13 @@ export default function CreateProposalPage() {
       <p className="mb-8 text-muted-foreground">
         Define a governance action and let the market decide its outcome.
       </p>
+
+      {!hasValidFactory && (
+        <div className="mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-400">
+          No factory address provided. Navigate to a finalized fundraise and click
+          &ldquo;Create Proposal&rdquo; to use the org&apos;s proposal factory.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <Card className="glass-card rounded-xl border-border">
@@ -288,11 +312,13 @@ export default function CreateProposalPage() {
 
             <Button
               type="submit"
-              disabled={!isConnected || isPending || isConfirming}
+              disabled={!isConnected || !hasValidFactory || isPending || isConfirming}
               className="btn-glow w-full border-0 py-3 text-primary-foreground"
             >
               {!isConnected ? (
                 "Connect wallet first"
+              ) : !hasValidFactory ? (
+                "No factory address"
               ) : isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

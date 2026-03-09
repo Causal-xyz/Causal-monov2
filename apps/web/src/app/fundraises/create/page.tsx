@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { useCreateOrganization } from "@/hooks/useCreateOrganization";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 import { Loader2 } from "lucide-react";
 
 type DurationUnit = "minutes" | "hours" | "days";
@@ -65,6 +66,14 @@ export default function CreateFundraisePage() {
     error,
   } = useCreateOrganization();
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
+
+  useTransactionToast({
+    hash,
+    isConfirming,
+    isSuccess,
+    error,
+    labels: { success: "Fundraise created!", pending: "Creating fundraise..." },
+  });
 
   const updateField = useCallback(
     (field: keyof FormState, value: string) => {

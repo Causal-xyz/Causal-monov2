@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import { Loader2, Check } from "lucide-react";
@@ -13,6 +12,8 @@ import {
 } from "@/components/ui/card";
 import { useFundraiseClaim } from "@/hooks/useFundraiseClaim";
 import { useUserContribution } from "@/hooks/useUserContribution";
+import { useOnceOnSuccess } from "@/hooks/useOnceOnSuccess";
+import { useTransactionToast } from "@/hooks/useTransactionToast";
 
 interface ClaimPanelProps {
   readonly orgId: number;
@@ -37,14 +38,21 @@ export function ClaimPanel({
     orgId,
     address,
   );
-  const { claim, isPending, isConfirming, isSuccess, error } =
+  const { claim, hash, isPending, isConfirming, isSuccess, error } =
     useFundraiseClaim();
 
-  useEffect(() => {
-    if (isSuccess) {
-      onSuccess?.();
-    }
-  }, [isSuccess, onSuccess]);
+  useOnceOnSuccess(isSuccess, onSuccess, hash);
+
+  useTransactionToast({
+    hash,
+    isConfirming,
+    isSuccess,
+    error,
+    labels: {
+      success: successful ? "Tokens claimed!" : "Refund claimed!",
+      pending: successful ? "Claiming tokens..." : "Claiming refund...",
+    },
+  });
 
   const hasContributed = committed > 0n;
 
