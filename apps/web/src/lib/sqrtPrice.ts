@@ -6,6 +6,7 @@
  */
 
 const Q96 = 2n ** 96n;
+const Q192 = Q96 * Q96;
 const PRECISION = 10n ** 18n;
 
 /**
@@ -48,6 +49,66 @@ export function priceToSqrtPriceX96(
  * @param priceAPerB - How many tokenA per 1 tokenB (e.g. 1.0 = 1:1)
  * @returns sqrtPriceX96 as bigint
  */
+/**
+ * Convert sqrtPriceX96 back to a human-readable price.
+ *
+ * price_smallest = (sqrtPriceX96 / 2^96)^2
+ * humanPrice = price_smallest / 10^(decimalsToken1 - decimalsToken0)
+ *
+ * @param sqrtPriceX96 - Raw sqrtPriceX96 from Uniswap V3 slot0
+ * @param decimalsToken0 - Decimals of token0 (the lower-address token)
+ * @param decimalsToken1 - Decimals of token1 (the higher-address token)
+ * @returns Human-readable price: 1 token0 = price token1
+ */
+export function sqrtPriceX96ToHumanPrice(
+  sqrtPriceX96: bigint,
+  decimalsToken0: number,
+  decimalsToken1: number,
+): number {
+  // price_smallest = sqrtPriceX96^2 / 2^192
+  // Use PRECISION scaling to preserve decimal accuracy
+  const numerator = sqrtPriceX96 * sqrtPriceX96 * PRECISION;
+  const priceSmallest = Number(numerator / Q192) / Number(PRECISION);
+
+  // Adjust for decimal difference
+  const decimalAdjustment = 10 ** (decimalsToken1 - decimalsToken0);
+  return priceSmallest / decimalAdjustment;
+}
+
+/**
+ * Convert sqrtPriceX96 to a human-readable price for a specific token pair,
+ * automatically handling token0/token1 ordering.
+ *
+ * Returns: "1 tokenA = X tokenB" (price of tokenA denominated in tokenB).
+ *
+ * @param sqrtPriceX96 - Raw sqrtPriceX96 from Uniswap V3 slot0
+ * @param tokenA - Address of the token we want the price of
+ * @param decimalsA - Decimals of tokenA
+ * @param tokenB - Address of the quote token (e.g. USDC)
+ * @param decimalsB - Decimals of tokenB
+ * @returns Human-readable price: 1 tokenA = X tokenB
+ */
+export function sqrtPriceX96ToHumanPriceForPair(
+  sqrtPriceX96: bigint,
+  tokenA: `0x${string}`,
+  decimalsA: number,
+  tokenB: `0x${string}`,
+  decimalsB: number,
+): number {
+  const aIsToken0 = tokenA.toLowerCase() < tokenB.toLowerCase();
+
+  if (aIsToken0) {
+    // token0 = A, token1 = B
+    // Uniswap price = token1/token0 = B/A → that IS "1 A = price B"
+    return sqrtPriceX96ToHumanPrice(sqrtPriceX96, decimalsA, decimalsB);
+  }
+
+  // token0 = B, token1 = A
+  // Uniswap price = token1/token0 = A/B → we want B/A = 1/price
+  const inversePrice = sqrtPriceX96ToHumanPrice(sqrtPriceX96, decimalsB, decimalsA);
+  return inversePrice === 0 ? 0 : 1 / inversePrice;
+}
+
 export function computeSqrtPriceX96ForPair(
   tokenA: `0x${string}`,
   decimalsA: number,

@@ -5,3 +5,5 @@ export { causalOrganizationsAbi } from "./causalOrganizations";
 export { treasuryAbi } from "./treasury";
 export { orgTokenAbi } from "./orgToken";
 export { mockUsdcAbi } from "./mockUsdc";
+export { uniswapV3PoolAbi } from "./uniswapV3Pool";
+export { swapRouterAbi } from "./swapRouter";

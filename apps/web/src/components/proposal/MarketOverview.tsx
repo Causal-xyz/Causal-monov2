@@ -1,9 +1,13 @@
 "use client";
 
 import { useAccount } from "wagmi";
+import { useReadContracts } from "wagmi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupAmmPanel } from "@/components/proposal/SetupAmmPanel";
-import { TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
+import { PriceDisplay } from "@/components/proposal/PriceDisplay";
+import { TradingPanel } from "@/components/proposal/TradingPanel";
+import { futarchyProposalAbi } from "@causal/shared";
+import { TrendingUp, AlertCircle } from "lucide-react";
 
 interface MarketOverviewProps {
   readonly proposal: {
@@ -22,6 +26,18 @@ interface MarketOverviewProps {
 export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
   const { address } = useAccount();
   const isOwner = address?.toLowerCase() === proposal.owner.toLowerCase();
+
+  // Read conditional token addresses for trading
+  const { data: tokenData } = useReadContracts({
+    contracts: [
+      { address: proposal.address, abi: futarchyProposalAbi, functionName: "yesX" },
+      { address: proposal.address, abi: futarchyProposalAbi, functionName: "noX" },
+    ],
+    query: { enabled: proposal.hasAmms },
+  });
+
+  const yesX = tokenData?.[0]?.result as `0x${string}` | undefined;
+  const noX = tokenData?.[1]?.result as `0x${string}` | undefined;
 
   if (!proposal.hasAmms) {
     if (isOwner) {
@@ -64,45 +80,54 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
     );
   }
 
+  const isResolved = proposal.outcome !== "Unresolved";
+
   return (
     <Card className="glass-card rounded-xl border-border">
       <CardHeader>
-        <CardTitle className="text-lg">Market Overview</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <TrendingUp className="h-5 w-5 text-causal" />
+          Market Overview
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-          {/* YES Market */}
-          <div className="rounded-lg border border-causal/20 bg-causal/5 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-causal" />
-              <span className="text-sm font-semibold text-causal">YES Market</span>
-            </div>
-            <div className="truncate font-mono text-xs text-muted-foreground">
-              {proposal.ammYesPair.slice(0, 10)}...
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              yesX / yesUSDC pool
-            </div>
-          </div>
+      <CardContent className="space-y-4">
+        {/* Live prices */}
+        <PriceDisplay
+          ammYesPair={proposal.ammYesPair}
+          ammNoPair={proposal.ammNoPair}
+          yesX={yesX}
+          noX={noX}
+          usdc={proposal.usdc}
+        />
 
-          {/* NO Market */}
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-destructive" />
-              <span className="text-sm font-semibold text-destructive">NO Market</span>
-            </div>
-            <div className="truncate font-mono text-xs text-muted-foreground">
-              {proposal.ammNoPair.slice(0, 10)}...
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              noX / noUSDC pool
-            </div>
+        {/* Pool addresses */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="text-xs text-muted-foreground">
+            <span className="text-causal">YES:</span>{" "}
+            <span className="font-mono">{proposal.ammYesPair.slice(0, 10)}...</span>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            <span className="text-destructive">NO:</span>{" "}
+            <span className="font-mono">{proposal.ammNoPair.slice(0, 10)}...</span>
           </div>
         </div>
 
-        {proposal.outcome === "Unresolved" && (
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Trade conditional tokens directly on Uniswap V3 using the pool addresses above.
+        {/* Trading panel — only when unresolved */}
+        {!isResolved && (
+          <TradingPanel
+            yesX={yesX}
+            noX={noX}
+            usdc={proposal.usdc}
+            ammYesPair={proposal.ammYesPair}
+            ammNoPair={proposal.ammNoPair}
+            userAddress={address}
+            onSuccess={onRefetch ?? (() => {})}
+          />
+        )}
+
+        {isResolved && (
+          <p className="text-center text-xs text-muted-foreground">
+            Market resolved — trading is closed.
           </p>
         )}
       </CardContent>

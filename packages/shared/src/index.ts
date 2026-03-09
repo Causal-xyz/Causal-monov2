@@ -14,4 +14,4 @@ export type {
   UserContribution,
   UserAllocation,
 } from "./types";
-export { futarchyFactoryAbi, futarchyProposalAbi, erc20Abi, causalOrganizationsAbi, treasuryAbi, orgTokenAbi, mockUsdcAbi } from "./abi";
+export { futarchyFactoryAbi, futarchyProposalAbi, erc20Abi, causalOrganizationsAbi, treasuryAbi, orgTokenAbi, mockUsdcAbi, uniswapV3PoolAbi, swapRouterAbi } from "./abi";

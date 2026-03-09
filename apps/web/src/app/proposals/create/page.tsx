@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { parseUnits, isAddress } from "viem";
 import { useAccount } from "wagmi";
@@ -40,6 +40,20 @@ function buildInitialForm(searchParams: URLSearchParams): FormState {
 }
 
 export default function CreateProposalPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-causal" />
+        </div>
+      }
+    >
+      <CreateProposalContent />
+    </Suspense>
+  );
+}
+
+function CreateProposalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const factoryParam = searchParams.get("factory") ?? "";
