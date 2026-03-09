@@ -7,7 +7,8 @@ Fundraise-to-governance platform smart contracts built with Foundry (Solidity 0.
 | Contract | Description |
 |----------|-------------|
 | **CausalOrganizations** | Singleton: create orgs, commit USDC, finalize fundraises, claim tokens |
-| **OrgDeployer** | Factory: deploys OrgToken + Treasury + FutarchyFactoryPoc per organization |
+| **OrgDeployer** | Factory: deploys OrgToken + Treasury per org, delegates factory to FutarchyFactoryDeployer |
+| **FutarchyFactoryDeployer** | Deploys FutarchyFactoryPoc instances (extracted to stay under EIP-170 size limit) |
 | **OrgToken** | ERC20 governance token with controlled minting (minter role) |
 | **Treasury** | Per-org treasury holding raised USDC, authorizes futarchy proposals |
 | **FutarchyFactoryPoc** | Factory for creating futarchy proposals (per-org, owned by founder) |
@@ -27,10 +28,11 @@ Fundraise-to-governance platform smart contracts built with Foundry (Solidity 0.
 |----------|---------|
 | MockTokenX | [`0xecFa95675aFF2F3776F53853Bb8da5a82015FB51`](https://testnet.snowscan.xyz/address/0xecFa95675aFF2F3776F53853Bb8da5a82015FB51) |
 | MockUSDC | [`0xbeA10d851aD86B86a277aC046C24Eb989dfd027c`](https://testnet.snowscan.xyz/address/0xbeA10d851aD86B86a277aC046C24Eb989dfd027c) |
-| OrgDeployer | [`0xe7F848326D7BC06127273a3B62459F38f77df226`](https://testnet.snowscan.xyz/address/0xe7F848326D7BC06127273a3B62459F38f77df226) |
-| CausalOrganizations | [`0x82E9b30ad1c10949476F4a10d62EAC83ddBA1213`](https://testnet.snowscan.xyz/address/0x82E9b30ad1c10949476F4a10d62EAC83ddBA1213) |
+| FutarchyFactoryDeployer | [`0xBA9E14280bcf15eE6bfB7f68CF51299A6081db37`](https://testnet.snowscan.xyz/address/0xBA9E14280bcf15eE6bfB7f68CF51299A6081db37) |
+| OrgDeployer | [`0x5FCeE979aAEA164B132DA3C64624eC41F89E01fA`](https://testnet.snowscan.xyz/address/0x5FCeE979aAEA164B132DA3C64624eC41F89E01fA) |
+| CausalOrganizations | [`0xFF2f657C62Fa4167EFf334F7d48Ff2aA6C49Bc2B`](https://testnet.snowscan.xyz/address/0xFF2f657C62Fa4167EFf334F7d48Ff2aA6C49Bc2B) |
 
-> OrgToken, Treasury, and FutarchyFactoryPoc are deployed dynamically per-organization during `finalizeRaise()` via OrgDeployer.
+> OrgToken, Treasury, and FutarchyFactoryPoc are deployed dynamically per-organization during `finalizeRaise()` via OrgDeployer (which delegates factory deployment to FutarchyFactoryDeployer).
 
 ### Uniswap V3 (Self-Deployed)
 

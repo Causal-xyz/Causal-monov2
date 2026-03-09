@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {MockTokenX} from "../src/MockTokenX.sol";
 import {MockUSDC} from "../src/MockUSDC.sol";
+import {FutarchyFactoryDeployer} from "../src/FutarchyFactoryDeployer.sol";
 import {OrgDeployer} from "../src/OrgDeployer.sol";
 import {CausalOrganizations} from "../src/CausalOrganizations.sol";
 
@@ -23,8 +24,11 @@ contract Deploy is Script {
         MockUSDC usdc = new MockUSDC();
         console.log("MockUSDC deployed:", address(usdc));
 
-        // 2. Deploy OrgDeployer (handles per-org contract creation)
-        OrgDeployer orgDeployer = new OrgDeployer();
+        // 2. Deploy FutarchyFactoryDeployer + OrgDeployer
+        FutarchyFactoryDeployer factoryDeployer = new FutarchyFactoryDeployer();
+        console.log("FutarchyFactoryDeployer deployed:", address(factoryDeployer));
+
+        OrgDeployer orgDeployer = new OrgDeployer(address(factoryDeployer));
         console.log("OrgDeployer deployed:", address(orgDeployer));
 
         // 3. Deploy CausalOrganizations singleton

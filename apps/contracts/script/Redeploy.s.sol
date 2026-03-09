@@ -2,13 +2,14 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
+import {FutarchyFactoryDeployer} from "../src/FutarchyFactoryDeployer.sol";
 import {OrgDeployer} from "../src/OrgDeployer.sol";
 import {CausalOrganizations} from "../src/CausalOrganizations.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @title Redeploy — Redeploy OrgDeployer + CausalOrganizations to Fuji
 /// @notice Reuses existing MockTokenX and MockUSDC. Only deploys contracts
-///         whose bytecode changed (OrgDeployer, CausalOrganizations).
+///         whose bytecode changed (FutarchyFactoryDeployer, OrgDeployer, CausalOrganizations).
 /// @dev Usage: forge script script/Redeploy.s.sol --rpc-url $RPC_URL --broadcast --verify --etherscan-api-key $SNOWTRACE_API_KEY
 contract Redeploy is Script {
     // Existing deployed addresses on Fuji (unchanged contracts)
@@ -25,15 +26,19 @@ contract Redeploy is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        // 1. Deploy new OrgDeployer (bytecode changed due to FutarchyFactoryPoc twapWindow)
-        OrgDeployer orgDeployer = new OrgDeployer();
+        // 1. Deploy FutarchyFactoryDeployer (holds FutarchyFactoryPoc creation code)
+        FutarchyFactoryDeployer factoryDeployer = new FutarchyFactoryDeployer();
+        console.log("FutarchyFactoryDeployer deployed:", address(factoryDeployer));
+
+        // 2. Deploy new OrgDeployer (points to FutarchyFactoryDeployer)
+        OrgDeployer orgDeployer = new OrgDeployer(address(factoryDeployer));
         console.log("OrgDeployer deployed:", address(orgDeployer));
 
-        // 2. Deploy new CausalOrganizations (points to new OrgDeployer)
+        // 3. Deploy new CausalOrganizations (points to new OrgDeployer)
         CausalOrganizations causal = new CausalOrganizations(MOCK_USDC, address(orgDeployer));
         console.log("CausalOrganizations deployed:", address(causal));
 
-        // 3. Wire OrgDeployer to CausalOrganizations (one-time operation)
+        // 4. Wire OrgDeployer to CausalOrganizations (one-time operation)
         orgDeployer.setCampaign(address(causal));
         console.log("OrgDeployer campaign set to:", address(causal));
 
@@ -41,10 +46,11 @@ contract Redeploy is Script {
 
         // Log summary
         console.log("------- REDEPLOYMENT SUMMARY -------");
-        console.log("MockTokenX (reused):  ", MOCK_TOKEN_X);
-        console.log("MockUSDC (reused):    ", MOCK_USDC);
-        console.log("OrgDeployer (new):    ", address(orgDeployer));
-        console.log("CausalOrganizations:  ", address(causal));
-        console.log("Deployer:             ", deployer);
+        console.log("MockTokenX (reused):         ", MOCK_TOKEN_X);
+        console.log("MockUSDC (reused):           ", MOCK_USDC);
+        console.log("FutarchyFactoryDeployer (new):", address(factoryDeployer));
+        console.log("OrgDeployer (new):           ", address(orgDeployer));
+        console.log("CausalOrganizations:         ", address(causal));
+        console.log("Deployer:                    ", deployer);
     }
 }
