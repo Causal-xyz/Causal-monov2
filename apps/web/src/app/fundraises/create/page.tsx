@@ -15,6 +15,8 @@ import {
 import { useCreateOrganization } from "@/hooks/useCreateOrganization";
 import { Loader2 } from "lucide-react";
 
+type DurationUnit = "minutes" | "hours" | "days";
+
 interface FormState {
   readonly name: string;
   readonly symbol: string;
@@ -23,9 +25,16 @@ interface FormState {
   readonly totalTokenSupply: string;
   readonly tokensForSale: string;
   readonly fundingGoal: string;
-  readonly saleDurationDays: string;
+  readonly saleDurationValue: string;
+  readonly saleDurationUnit: DurationUnit;
   readonly alpha: string;
 }
+
+const UNIT_MULTIPLIERS: Record<DurationUnit, number> = {
+  minutes: 60,
+  hours: 3600,
+  days: 86400,
+};
 
 const INITIAL_FORM: FormState = {
   name: "",
@@ -35,7 +44,8 @@ const INITIAL_FORM: FormState = {
   totalTokenSupply: "1000000",
   tokensForSale: "500000",
   fundingGoal: "10000",
-  saleDurationDays: "7",
+  saleDurationValue: "7",
+  saleDurationUnit: "days",
   alpha: "50",
 };
 
@@ -78,7 +88,10 @@ export default function CreateFundraisePage() {
       tokensForSale: parseUnits(form.tokensForSale || "0", TOKEN_DECIMALS),
       fundingGoal: parseUnits(form.fundingGoal || "0", USDC_DECIMALS),
       saleDuration: BigInt(
-        Math.floor(parseFloat(form.saleDurationDays || "0") * 86400),
+        Math.floor(
+          parseFloat(form.saleDurationValue || "0") *
+            UNIT_MULTIPLIERS[form.saleDurationUnit],
+        ),
       ),
       alpha: alphaPrecision,
     });
@@ -248,19 +261,32 @@ export default function CreateFundraisePage() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium">
-                      Sale Duration (days)
+                      Sale Duration
                     </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      required
-                      value={form.saleDurationDays}
-                      onChange={(e) =>
-                        updateField("saleDurationDays", e.target.value)
-                      }
-                      placeholder="7"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        value={form.saleDurationValue}
+                        onChange={(e) =>
+                          updateField("saleDurationValue", e.target.value)
+                        }
+                        placeholder="7"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                      />
+                      <select
+                        value={form.saleDurationUnit}
+                        onChange={(e) =>
+                          updateField("saleDurationUnit", e.target.value)
+                        }
+                        className="rounded-lg border border-border bg-background px-2 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                      >
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div>

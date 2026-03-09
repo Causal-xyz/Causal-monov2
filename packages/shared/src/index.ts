@@ -1,4 +1,4 @@
-export { APP_NAME, CHAIN_ID, FUJI_RPC_URL, CONTRACTS, FEE_TIERS, TWAP_WINDOW_SECONDS, OUTCOME } from "./constants";
+export { APP_NAME, CHAIN_ID, FUJI_RPC_URL, CONTRACTS, FEE_TIERS, TWAP_WINDOW_SECONDS, MIN_TWAP_WINDOW_SECONDS, OUTCOME } from "./constants";
 export type {
   Outcome,
   ProposalStatus,

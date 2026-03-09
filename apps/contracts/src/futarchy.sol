@@ -129,6 +129,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
     error UniswapV3LiquidityAdditionFailed();
     error InvalidFeeTier();
     error TransferFailed();
+    error TwapWindowTooShort();
 
     uint256 public immutable proposalId;
     string public title;
@@ -152,6 +153,7 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
     ConditionalToken public immutable noUsdc;
 
     uint256 public immutable resolutionTimestamp;
+    uint32 public immutable twapWindow;
     IUniswapV3Factory public uniswapV3Factory;
     INonfungiblePositionManager public positionManager;
     IOracle public ammYesPair;
@@ -184,18 +186,21 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
         uint256 transferAmount_,
         address treasury_,
         uint256 usdcRequested_,
-        uint256 tokensToMint_
+        uint256 tokensToMint_,
+        uint32 twapWindow_
     ) Ownable(owner_) {
         require(tokenX_ != address(0), "tokenX=0");
         require(usdc_ != address(0), "usdc=0");
         require(recipient_ != address(0), "recipient=0");
         require(transferToken_ != address(0), "transferToken=0");
+        if (twapWindow_ < 60) revert TwapWindowTooShort();
 
         proposalId = proposalId_;
         title = title_;
         tokenX = IERC20(tokenX_);
         usdc = IERC20(usdc_);
         resolutionTimestamp = resolutionTimestamp_;
+        twapWindow = twapWindow_;
         transferToken = IERC20(transferToken_);
         recipient = recipient_;
         transferAmount = transferAmount_;
@@ -407,11 +412,11 @@ contract FutarchyProposalPoc is Ownable, ReentrancyGuard {
 
     function getTwap(IOracle pool) internal view returns (int56) {
         uint32[] memory secondsAgos = new uint32[](2);
-        secondsAgos[0] = 3600;
+        secondsAgos[0] = twapWindow;
         secondsAgos[1] = 0;
 
         (int56[] memory tickCumulatives, ) = pool.observe(secondsAgos);
-        return (tickCumulatives[1] - tickCumulatives[0]) / 3600;
+        return (tickCumulatives[1] - tickCumulatives[0]) / int56(int32(twapWindow));
     }
 
     function splitX(uint256 amount, address receiver) external nonReentrant onlyUnresolved {
@@ -498,6 +503,7 @@ contract FutarchyFactoryPoc is Ownable {
     /// @param transferAmount Amount to transfer on YES (standalone mode)
     /// @param usdcRequested USDC to spend from treasury on YES (treasury mode)
     /// @param tokensToMint Governance tokens to mint via treasury on YES (treasury mode)
+    /// @param twapWindow_ TWAP observation window in seconds (min 60)
     function createProposal(
         string memory title,
         address tokenX,
@@ -507,7 +513,8 @@ contract FutarchyFactoryPoc is Ownable {
         address recipient,
         uint256 transferAmount,
         uint256 usdcRequested,
-        uint256 tokensToMint
+        uint256 tokensToMint,
+        uint32 twapWindow_
     ) external onlyOwner returns (address) {
         proposalCount++;
         FutarchyProposalPoc proposal = new FutarchyProposalPoc(
@@ -522,7 +529,8 @@ contract FutarchyFactoryPoc is Ownable {
             transferAmount,
             address(treasury),
             usdcRequested,
-            tokensToMint
+            tokensToMint,
+            twapWindow_
         );
         proposals[proposalCount] = address(proposal);
 

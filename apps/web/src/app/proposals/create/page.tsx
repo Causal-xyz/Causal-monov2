@@ -16,6 +16,7 @@ interface FormState {
   readonly usdc: string;
   readonly resolutionDate: string;
   readonly resolutionTime: string;
+  readonly twapWindowMinutes: string;
   readonly transferToken: string;
   readonly recipient: string;
   readonly transferAmount: string;
@@ -27,6 +28,7 @@ const INITIAL_FORM: FormState = {
   usdc: CONTRACTS.mockUsdc || "",
   resolutionDate: "",
   resolutionTime: "",
+  twapWindowMinutes: "60",
   transferToken: "",
   recipient: "",
   transferAmount: "0",
@@ -63,6 +65,7 @@ export default function CreateProposalPage() {
       transferToken: (form.transferToken || form.tokenX) as `0x${string}`,
       recipient: (form.recipient || address!) as `0x${string}`,
       transferAmount: parseUnits(form.transferAmount || "0", 18),
+      twapWindow: Math.max(60, parseInt(form.twapWindowMinutes || "60", 10) * 60),
     });
   }
 
@@ -145,31 +148,89 @@ export default function CreateProposalPage() {
             </div>
 
             {/* Resolution timestamp */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Resolution Date
-                </label>
+            <div className="space-y-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium">
+                    Resolution Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={form.resolutionDate}
+                    onChange={(e) => updateField("resolutionDate", e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium">
+                    Resolution Time
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={form.resolutionTime}
+                    onChange={(e) => updateField("resolutionTime", e.target.value)}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs text-muted-foreground self-center">Quick:</span>
+                {[5, 10, 30, 60].map((minutes) => {
+                  const label = minutes < 60 ? `${minutes}m` : `${minutes / 60}h`;
+                  return (
+                    <button
+                      key={minutes}
+                      type="button"
+                      onClick={() => {
+                        const d = new Date(Date.now() + minutes * 60_000);
+                        updateField("resolutionDate", d.toISOString().slice(0, 10));
+                        updateField(
+                          "resolutionTime",
+                          d.toTimeString().slice(0, 5),
+                        );
+                      }}
+                      className="rounded-md border border-border bg-background px-2 py-1 text-xs transition-colors hover:border-causal/50 hover:bg-causal/10"
+                    >
+                      +{label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* TWAP Window */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">
+                TWAP Window (minutes)
+              </label>
+              <div className="flex gap-2">
                 <input
-                  type="date"
+                  type="text"
+                  inputMode="numeric"
                   required
-                  value={form.resolutionDate}
-                  onChange={(e) => updateField("resolutionDate", e.target.value)}
+                  value={form.twapWindowMinutes}
+                  onChange={(e) => updateField("twapWindowMinutes", e.target.value)}
+                  placeholder="60"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
                 />
+                <div className="flex gap-1">
+                  {[1, 5, 10, 60].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => updateField("twapWindowMinutes", String(m))}
+                      className="whitespace-nowrap rounded-md border border-border bg-background px-2 py-1 text-xs transition-colors hover:border-causal/50 hover:bg-causal/10"
+                    >
+                      {m}m
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium">
-                  Resolution Time
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={form.resolutionTime}
-                  onChange={(e) => updateField("resolutionTime", e.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-causal/50 focus:ring-1 focus:ring-causal/30"
-                />
-              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Oracle observation window for TWAP price. Min 1 minute. Use short windows for testing.
+              </p>
             </div>
 
             {/* Transfer action (if YES wins) */}

@@ -17,6 +17,7 @@ export function useCreateProposal() {
     transferAmount: bigint;
     usdcRequested?: bigint;
     tokensToMint?: bigint;
+    twapWindow?: number;
   }) {
     writeContract({
       address: CONTRACTS.factory,
@@ -32,6 +33,7 @@ export function useCreateProposal() {
         params.transferAmount,
         params.usdcRequested ?? 0n,
         params.tokensToMint ?? 0n,
+        params.twapWindow ?? 3600,
       ],
     });
   }

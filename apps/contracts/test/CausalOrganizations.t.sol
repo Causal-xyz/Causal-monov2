@@ -521,7 +521,8 @@ contract CausalOrganizationsTest is Test {
             address(0x999), // recipient
             0, // transferAmount (unused in treasury mode)
             50_000e6, // usdcRequested from treasury
-            0 // tokensToMint
+            0, // tokensToMint
+            3600 // twapWindow (1 hour)
         );
 
         // Verify the proposal was authorized in the treasury

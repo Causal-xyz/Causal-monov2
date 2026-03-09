@@ -108,7 +108,7 @@ export default function FundraisesPage() {
                           {org.status === "funding"
                             ? isPast
                               ? "Sale ended"
-                              : `Ends ${deadline.toLocaleDateString()}`
+                              : `Ends ${deadline.toLocaleString()}`
                             : org.status === "finalized"
                               ? "Successfully funded"
                               : "Did not reach goal"}

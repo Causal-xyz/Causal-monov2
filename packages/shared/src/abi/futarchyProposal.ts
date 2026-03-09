@@ -58,6 +58,13 @@ export const futarchyProposalAbi = [
   },
   {
     type: "function",
+    name: "twapWindow",
+    inputs: [],
+    outputs: [{ name: "", type: "uint32" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "outcome",
     inputs: [],
     outputs: [{ name: "", type: "uint8" }],
@@ -354,4 +361,5 @@ export const futarchyProposalAbi = [
   { type: "error", name: "UniswapV3LiquidityAdditionFailed", inputs: [] },
   { type: "error", name: "InvalidFeeTier", inputs: [] },
   { type: "error", name: "TransferFailed", inputs: [] },
+  { type: "error", name: "TwapWindowTooShort", inputs: [] },
 ] as const;

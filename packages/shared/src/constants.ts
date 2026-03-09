@@ -29,8 +29,11 @@ export const FEE_TIERS = {
   HIGH: 10000,
 } as const;
 
-/** 1-hour TWAP window used by the contract */
+/** Default TWAP window in seconds (now configurable per proposal, min 60) */
 export const TWAP_WINDOW_SECONDS = 3600;
+
+/** Minimum TWAP window enforced by the contract (seconds) */
+export const MIN_TWAP_WINDOW_SECONDS = 60;
 
 /** Outcome enum matching the Solidity contract */
 export const OUTCOME = {
