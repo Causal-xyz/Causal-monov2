@@ -1,3 +1,4 @@
+/** SwapRouter02 ABI — no `deadline` in struct (deadline is handled via multicall wrapper) */
 export const swapRouterAbi = [
   {
     type: "function",
@@ -11,7 +12,6 @@ export const swapRouterAbi = [
           { name: "tokenOut", type: "address" },
           { name: "fee", type: "uint24" },
           { name: "recipient", type: "address" },
-          { name: "deadline", type: "uint256" },
           { name: "amountIn", type: "uint256" },
           { name: "amountOutMinimum", type: "uint256" },
           { name: "sqrtPriceLimitX96", type: "uint160" },
@@ -33,7 +33,6 @@ export const swapRouterAbi = [
           { name: "tokenOut", type: "address" },
           { name: "fee", type: "uint24" },
           { name: "recipient", type: "address" },
-          { name: "deadline", type: "uint256" },
           { name: "amountOut", type: "uint256" },
           { name: "amountInMaximum", type: "uint256" },
           { name: "sqrtPriceLimitX96", type: "uint160" },

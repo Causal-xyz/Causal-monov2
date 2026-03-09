@@ -28,7 +28,6 @@ export function useSwapExactInput() {
   const error = writeError ?? receiptError;
 
   function swap(params: SwapExactInputParams) {
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200);
     writeContract({
       address: CONTRACTS.swapRouter,
       abi: swapRouterAbi,
@@ -39,7 +38,6 @@ export function useSwapExactInput() {
           tokenOut: params.tokenOut,
           fee: params.fee,
           recipient: params.recipient,
-          deadline,
           amountIn: params.amountIn,
           amountOutMinimum: params.amountOutMinimum,
           sqrtPriceLimitX96: 0n,
@@ -58,7 +56,6 @@ export function useSwapExactOutput() {
   const error = writeError ?? receiptError;
 
   function swap(params: SwapExactOutputParams) {
-    const deadline = BigInt(Math.floor(Date.now() / 1000) + 1200);
     writeContract({
       address: CONTRACTS.swapRouter,
       abi: swapRouterAbi,
@@ -69,7 +66,6 @@ export function useSwapExactOutput() {
           tokenOut: params.tokenOut,
           fee: params.fee,
           recipient: params.recipient,
-          deadline,
           amountOut: params.amountOut,
           amountInMaximum: params.amountInMaximum,
           sqrtPriceLimitX96: 0n,

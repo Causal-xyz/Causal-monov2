@@ -32,7 +32,9 @@ export function usePoolPrice(
   const slot0 = data?.[0]?.result as
     | readonly [bigint, number, number, number, number, number, boolean]
     | undefined;
-  const fee = data?.[1]?.result as number | undefined;
+  // fee() returns uint24 — viem may return number or bigint depending on version
+  const rawFee = data?.[1]?.result;
+  const fee = rawFee !== undefined && rawFee !== null ? Number(rawFee) : undefined;
   const liquidity = data?.[2]?.result as bigint | undefined;
 
   const sqrtPriceX96 = slot0?.[0] ?? null;
