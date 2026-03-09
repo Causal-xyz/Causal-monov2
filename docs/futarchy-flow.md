@@ -48,6 +48,19 @@ In this implementation, a proposal's outcome (Yes or No) is determined by compar
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
+│                    CausalOrganizations (singleton)               │
+│  createOrganization() / commit() / finalizeRaise() / claim()    │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ finalizeRaise() calls
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       OrgDeployer                               │
+│  deployOrg() → OrgToken + Treasury                              │
+│             → delegates factory to FutarchyFactoryDeployer      │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ deploys (per-org)
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
 │                      FutarchyFactoryPoc                         │
 │                    (Proposal Registry)                           │
 │                                                                  │

@@ -46,7 +46,8 @@ apps/
   contracts/    → Foundry smart contracts
     src/
       CausalOrganizations.sol → Singleton: fundraise creation, commit, finalize, claim
-      OrgDeployer.sol         → Factory: deploys OrgToken + Treasury + FutarchyFactory per org
+      OrgDeployer.sol         → Factory: deploys OrgToken + Treasury per org, delegates factory to FutarchyFactoryDeployer
+      FutarchyFactoryDeployer.sol → Deploys FutarchyFactoryPoc instances (extracted for EIP-170 size limit)
       OrgToken.sol            → ERC20 governance token with controlled minting
       Treasury.sol            → Per-org treasury holding USDC, authorizes proposals
       futarchy.sol            → ConditionalToken, FutarchyProposalPoc (factory field, setupAmmWithLiquidity), FutarchyFactoryPoc (createProposalWithAmm)
@@ -55,7 +56,7 @@ apps/
     script/
       Deploy.s.sol            → Deploys MockTokenX, MockUSDC, CausalOrganizations
       Redeploy.s.sol          → Redeploys OrgDeployer + CausalOrganizations (reuses mock tokens)
-      RedeployWithAmm.s.sol   → Redeploys after AMM integration changes
+      RedeployWithAmm.s.sol   → Redeploys FutarchyFactoryDeployer + OrgDeployer + CausalOrganizations (reuses mock tokens)
     test/
       CausalOrganizations.t.sol → 23 tests (create, commit, finalize, claim, lifecycle)
       Futarchy.t.sol            → 13 tests (proposal, resolve, AMM setup, createProposalWithAmm, edge cases)
@@ -128,9 +129,27 @@ Each app has a `.env.example` — copy to `.env.local` (web/api) or `.env` (cont
 
 ## Smart Contract Deployment
 
+### Current Deployment — Avalanche Fuji (43113)
+
+| Contract | Address |
+|----------|---------|
+| MockTokenX | `0xecFa95675aFF2F3776F53853Bb8da5a82015FB51` |
+| MockUSDC | `0xbeA10d851aD86B86a277aC046C24Eb989dfd027c` |
+| FutarchyFactoryDeployer | `0xBA9E14280bcf15eE6bfB7f68CF51299A6081db37` |
+| OrgDeployer | `0x5FCeE979aAEA164B132DA3c64624eC41F89E01fA` |
+| CausalOrganizations | `0xFF2f657C62Fa4167EFf334F7d48Ff2aA6C49Bc2B` |
+
+> OrgToken, Treasury, and FutarchyFactoryPoc are deployed dynamically per-organization during `finalizeRaise()`.
+
+### Deploy Commands
+
 ```sh
 cd apps/contracts
+# Full deploy (new chain / fresh start)
 forge script script/Deploy.s.sol --rpc-url https://api.avax-test.network/ext/bc/C/rpc --broadcast
+
+# Redeploy (reuses mock tokens, deploys new FutarchyFactoryDeployer + OrgDeployer + CausalOrganizations)
+forge script script/RedeployWithAmm.s.sol --rpc-url https://api.avax-test.network/ext/bc/C/rpc --broadcast
 ```
 
 After deployment, set the contract addresses in each app's `.env.local`.

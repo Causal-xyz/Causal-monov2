@@ -9,7 +9,8 @@ Fundraise-to-governance platform: CausalOrganizations manages time-weighted toke
 ```
 src/
   CausalOrganizations.sol → Singleton: create org, commit USDC, finalize, claim tokens
-  OrgDeployer.sol         → Factory: deploys OrgToken + Treasury + FutarchyFactory per org
+  OrgDeployer.sol         → Factory: deploys OrgToken + Treasury per org, delegates factory to FutarchyFactoryDeployer
+  FutarchyFactoryDeployer.sol → Deploys FutarchyFactoryPoc instances (extracted for EIP-170 size limit)
   OrgToken.sol            → ERC20 governance token with controlled minting (minter role)
   Treasury.sol            → Per-org treasury: holds USDC, authorizes proposals, spendFunds/mintTokens
   futarchy.sol            → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
@@ -20,7 +21,8 @@ test/
   Futarchy.t.sol            → 13 tests (proposal, resolve, AMM setup, createProposalWithAmm, edge cases)
 script/
   Deploy.s.sol              → Deploys MockTokenX, MockUSDC, OrgDeployer, CausalOrganizations
-  RedeployWithAmm.s.sol     → Redeploys after AMM integration changes (reuses mock tokens)
+  Redeploy.s.sol            → Redeploys OrgDeployer + CausalOrganizations (reuses mock tokens)
+  RedeployWithAmm.s.sol     → Redeploys FutarchyFactoryDeployer + OrgDeployer + CausalOrganizations (reuses mock tokens)
 lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V3)
 ```
 
@@ -34,10 +36,16 @@ lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V
 - `claim()` — investors redeem tokens + refund based on `alpha × (acc/totalAcc) + (1-alpha) × (committed/totalCommitted)`
 
 ### OrgDeployer
-- Deploys OrgToken + Treasury + FutarchyFactoryPoc per organization
+- Deploys OrgToken + Treasury per organization, delegates FutarchyFactoryPoc deployment to FutarchyFactoryDeployer
+- `factoryDeployer` — immutable reference to FutarchyFactoryDeployer (set at construction)
 - `setCampaign()` — one-time setup linking to CausalOrganizations (resolves circular deployment dependency)
 - `deployOrg()` — called by CausalOrganizations during finalizeRaise, onlyCampaign
 - Extracted from CausalOrganizations to stay under EIP-170 contract size limit (24,576 bytes)
+
+### FutarchyFactoryDeployer
+- Deploys FutarchyFactoryPoc instances on behalf of OrgDeployer
+- `deploy(owner_, treasury_)` — creates and returns a new FutarchyFactoryPoc
+- Extracted from OrgDeployer to keep it under the EIP-170 size limit (avoids embedding large factory + proposal creation code)
 
 ### OrgToken
 - ERC20 with `minter` role (initially CausalOrganizations, then transferred to Treasury)
