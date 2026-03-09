@@ -486,7 +486,7 @@ flowchart TD
   MERGE -.-> SPLIT
   TRADE --> RES{"Resolution Timestamp Passed?"}:::decision
   RES -->|No| TRADE
-  RES -->|Yes| TWAP["Compare 1hr TWAP"]:::phase6
+  RES -->|Yes| TWAP["Compare TWAP (configurable window)"]:::phase6
   TWAP --> OUTCOME{" yesTwap > noTwap ?"}:::decision
   OUTCOME -->|Yes| YESWIN["YES Wins"]:::yes
   OUTCOME -->|No / Tie| NOWIN["NO Wins"]:::no
@@ -726,8 +726,8 @@ flowchart TD
 flowchart LR
   A["Anyone calls resolve()"] --> B{"timestamp >= resolutionTimestamp?"}
   B -->|No| ERR1["Revert: ResolutionPeriodNotOver"]
-  B -->|Yes| C["Get 1hr TWAP from YES pool"]
-  C --> D["Get 1hr TWAP from NO pool"]
+  B -->|Yes| C["Get TWAP from YES pool (twapWindow)"]
+  C --> D["Get TWAP from NO pool (twapWindow)"]
   D --> E{"yesTwap > noTwap?"}
   E -->|Yes| F["Outcome = YES"]
   E -->|No or Equal| G["Outcome = NO"]
@@ -762,10 +762,10 @@ flowchart LR
       <p><strong>How <code>getTwap()</code> works:</strong></p>
       <div style="font-family:var(--font-mono);font-size:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px;line-height:1.8;overflow-x:auto">
         <div style="color:var(--text-dim)">// Query Uniswap V3 oracle at two points:</div>
-        <div>secondsAgos = [<span style="color:var(--amber)">3600</span>, <span style="color:var(--amber)">0</span>] <span style="color:var(--text-dim)">// 1 hour ago, now</span></div>
+        <div>secondsAgos = [<span style="color:var(--amber)">twapWindow</span>, <span style="color:var(--amber)">0</span>] <span style="color:var(--text-dim)">// twapWindow seconds ago, now</span></div>
         <div style="margin-top:8px">(tickCumulatives, _) = pool.<span style="color:var(--cyan)">observe</span>(secondsAgos)</div>
-        <div style="margin-top:8px"><span style="color:var(--text-dim)">// Average tick over the 1-hour window:</span></div>
-        <div>avgTick = (tickCumulatives[<span style="color:var(--amber)">1</span>] - tickCumulatives[<span style="color:var(--amber)">0</span>]) / <span style="color:var(--amber)">3600</span></div>
+        <div style="margin-top:8px"><span style="color:var(--text-dim)">// Average tick over the twapWindow:</span></div>
+        <div>avgTick = (tickCumulatives[<span style="color:var(--amber)">1</span>] - tickCumulatives[<span style="color:var(--amber)">0</span>]) / <span style="color:var(--amber)">twapWindow</span></div>
         <div style="margin-top:8px;color:var(--text-dim)">// Higher tick = higher price (price = 1.0001^tick)</div>
       </div>
     </div>
@@ -776,7 +776,7 @@ flowchart LR
         <div class="desc"><strong>Low</strong> manipulation resistance. Very fresh prices. Easily attackable.</div>
       </div>
       <div class="mini-card" style="border-color:var(--green-dim)">
-        <div class="label" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span> 1 hr TWAP (used)</div>
+        <div class="label" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span> 1 hr TWAP (default)</div>
         <div class="desc"><strong>Good balance</strong> of manipulation resistance and price freshness. Quadratic capital cost for attacks.</div>
       </div>
       <div class="mini-card">
@@ -967,7 +967,7 @@ flowchart LR
     </details>
 
     <div class="callout anim" style="--i:53" style="margin-top:24px">
-      <strong>Security:</strong> ReentrancyGuard on all split/merge/redeem. SafeERC20 for all transfers. 1-hour TWAP makes flash loan attacks impractical. State guards prevent invalid transitions. Input validation on all boundaries.
+      <strong>Security:</strong> ReentrancyGuard on all split/merge/redeem. SafeERC20 for all transfers. Configurable TWAP window (min 60s, default 1 hour) makes flash loan attacks impractical. State guards prevent invalid transitions. Input validation on all boundaries.
     </div>
 
     <div style="text-align:center;padding:40px 0;font-family:var(--font-mono);font-size:11px;color:var(--text-dim)">

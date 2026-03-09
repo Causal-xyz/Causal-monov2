@@ -49,11 +49,12 @@ apps/
       OrgDeployer.sol         → Factory: deploys OrgToken + Treasury + FutarchyFactory per org
       OrgToken.sol            → ERC20 governance token with controlled minting
       Treasury.sol            → Per-org treasury holding USDC, authorizes proposals
-      futarchy.sol            → ConditionalToken, FutarchyProposalPoc, FutarchyFactoryPoc
+      futarchy.sol            → ConditionalToken, FutarchyProposalPoc (configurable twapWindow), FutarchyFactoryPoc
       MockTokenX.sol          → Test ERC20 (CTK, 18 decimals, public mint + faucet)
       MockUSDC.sol            → Test USDC (mUSDC, 6 decimals, public mint + faucet)
     script/
       Deploy.s.sol            → Deploys MockTokenX, MockUSDC, CausalOrganizations
+      Redeploy.s.sol          → Redeploys OrgDeployer + CausalOrganizations (reuses mock tokens)
     test/
       CausalOrganizations.t.sol → 23 tests (create, commit, finalize, claim, lifecycle)
       Futarchy.t.sol            → 5 tests (proposal, resolve yes/no, edge cases)

@@ -122,6 +122,7 @@ The core contract managing the full proposal lifecycle.
 - `recipient` — who receives the transfer
 - `transferAmount` — how much to transfer
 - `resolutionTimestamp` — when resolution becomes possible
+- `twapWindow` — TWAP oracle observation window in seconds (minimum 60)
 - `yesX`, `noX`, `yesUsdc`, `noUsdc` — the 4 conditional tokens
 
 **Mutable state** (changes during lifecycle):
@@ -208,7 +209,8 @@ FutarchyFactoryPoc
 Factory Owner
      │
      │  createProposal(title, tokenX, usdc, resolutionTimestamp,
-     │                  transferToken, recipient, transferAmount)
+     │                  transferToken, recipient, transferAmount,
+     │                  usdcRequested, tokensToMint, twapWindow_)
      ▼
 ┌─────────────────────────┐
 │   FutarchyFactoryPoc    │
@@ -227,6 +229,7 @@ Factory Owner
 │                                         │
 │  Constructor:                           │
 │  1. Validate addresses ≠ 0             │
+│  1b. Validate twapWindow ≥ 60          │
 │  2. Store immutable config              │
 │  3. Read tokenX symbol & decimals       │
 │  4. Read USDC symbol & decimals         │
@@ -252,6 +255,9 @@ Factory Owner
 | `transferToken` | address | Token transferred to recipient if Yes wins |
 | `recipient` | address | Who receives tokens on Yes outcome |
 | `transferAmount` | uint256 | How much to transfer on Yes outcome |
+| `usdcRequested` | uint256 | USDC to spend from treasury on Yes (treasury mode) |
+| `tokensToMint` | uint256 | Governance tokens to mint via treasury on Yes |
+| `twapWindow_` | uint32 | TWAP oracle observation window in seconds (min 60) |
 
 ### Conditional Token Naming Convention
 
@@ -599,8 +605,8 @@ Anyone calls resolve()
 │  yesTwap = getTwap(ammYesPair)                               │
 │  noTwap  = getTwap(ammNoPair)                                │
 │                                                              │
-│  Each TWAP is the average tick over the last 3600 seconds    │
-│  (see Section 13 for details)                                │
+│  Each TWAP is the average tick over the last twapWindow      │
+│  seconds (see Section 13 for details)                        │
 └────────────────────────┬───────────────────────────────────┘
                          │
                          ▼
@@ -730,11 +736,11 @@ If **No wins**, no transfer occurs — the proposal is rejected and the tokens s
 ```solidity
 function getTwap(IOracle pool) internal view returns (int56) {
     uint32[] memory secondsAgos = new uint32[](2);
-    secondsAgos[0] = 3600;  // 1 hour ago
-    secondsAgos[1] = 0;     // now
+    secondsAgos[0] = twapWindow;  // twapWindow seconds ago
+    secondsAgos[1] = 0;           // now
 
     (int56[] memory tickCumulatives, ) = pool.observe(secondsAgos);
-    return (tickCumulatives[1] - tickCumulatives[0]) / 3600;
+    return (tickCumulatives[1] - tickCumulatives[0]) / int56(int32(twapWindow));
 }
 ```
 
@@ -742,14 +748,14 @@ function getTwap(IOracle pool) internal view returns (int56) {
 
 ```
 1. Query the Uniswap V3 oracle for tick cumulatives at:
-   ├── t = now - 3600 seconds (1 hour ago)
+   ├── t = now - twapWindow seconds
    └── t = now
 
 2. tickCumulative is a running sum of ticks over time:
    tickCumulative(t) = Σ tick(i) × Δt(i) for all i from 0 to t
 
 3. Average tick over the window:
-   avgTick = (tickCumulative[now] - tickCumulative[1h ago]) / 3600
+   avgTick = (tickCumulative[now] - tickCumulative[twapWindow ago]) / twapWindow
 
 4. The tick represents log₁.₀₀₀₁(price):
    price = 1.0001^tick
@@ -757,25 +763,26 @@ function getTwap(IOracle pool) internal view returns (int56) {
 5. Higher tick = higher price
 ```
 
-### Why 1-Hour TWAP?
+### Configurable TWAP Window
 
-| Window | Manipulation Resistance | Price Freshness |
-|---|---|---|
-| 5 minutes | Low — easily manipulable | Very fresh |
-| 1 hour | **Good balance** | Reasonably fresh |
-| 24 hours | Very high | May be stale |
+The TWAP window is configurable per proposal via the `twapWindow` parameter (set at creation, minimum 60 seconds). This allows short windows for testnet testing while maintaining security in production.
 
-1 hour provides a good balance between manipulation resistance and price responsiveness.
+| Window | Manipulation Resistance | Price Freshness | Use Case |
+|---|---|---|---|
+| 1 minute | Very low | Extremely fresh | Testnet only |
+| 5 minutes | Low | Very fresh | Testnet / quick demos |
+| 1 hour (default) | **Good balance** | Reasonably fresh | **Production recommended** |
+| 24 hours | Very high | May be stale | High-value proposals |
 
 ### Manipulation Cost
 
-To manipulate a 1-hour TWAP by X%, an attacker would need to:
+To manipulate a TWAP by X%, an attacker would need to:
 1. Move the spot price by X%
-2. Hold it there for the entire hour
+2. Hold it there for the **entire `twapWindow` duration**
 3. Pay trading fees on the capital required
 4. Accept impermanent loss risk
 
-The capital cost scales quadratically with the manipulation size, making large manipulations prohibitively expensive.
+The capital cost scales with both the manipulation size and the window duration. Longer windows require sustaining the manipulation longer, increasing cost. For production deployments, 1 hour (3600 seconds) is the recommended default.
 
 ---
 
@@ -868,6 +875,7 @@ The capital cost scales quadratically with the manipulation size, making large m
 | `UniswapV3LiquidityAdditionFailed()` | Liquidity mint returns 0 values | createAndSetAmms |
 | `InvalidFeeTier()` | Fee tier has no tickSpacing configured | createAndSetAmms |
 | `TransferFailed()` | (Defined, SafeERC20 handles this internally) | — |
+| `TwapWindowTooShort()` | twapWindow_ constructor argument < 60 seconds | FutarchyProposalPoc constructor |
 
 ---
 
@@ -899,7 +907,7 @@ The capital cost scales quadratically with the manipulation size, making large m
 | State guards | `onlyUnresolved` / `onlyResolved` modifiers prevent invalid state transitions |
 | Zero amount | Explicit checks prevent no-op operations |
 | One-time AMM setup | `AmmsAlreadySet` error prevents re-initialization |
-| Oracle manipulation | 1-hour TWAP makes flash loan attacks impractical |
+| Oracle manipulation | Configurable TWAP window (min 60s, default 1 hour) makes flash loan attacks impractical |
 | Input validation | Constructor validates all addresses ≠ address(0) |
 
 ### Known Limitations (POC)

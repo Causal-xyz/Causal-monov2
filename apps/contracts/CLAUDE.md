@@ -57,11 +57,13 @@ lib/                        → Dependencies (forge-std, OpenZeppelin, Uniswap V
 - `splitX()` / `splitUsdc()` — split base tokens into yes/no pairs
 - `mergeX()` / `mergeUsdc()` — merge pairs back to base
 - `createAndSetAmms()` — creates Uniswap V3 pools with full-range liquidity
-- `resolve()` — resolves via 1-hour TWAP; on YES, calls `treasury.spendFunds()` / `treasury.mintTokens()`
+- `resolve()` — resolves via configurable TWAP (`twapWindow`, min 60s); on YES, calls `treasury.spendFunds()` / `treasury.mintTokens()`
+- `twapWindow` — immutable, set at construction, configurable per proposal (default 3600s for production, shorter for testing)
 - Supports both treasury mode and standalone mode (`address(0)` treasury)
 
 ### FutarchyFactoryPoc
 - Factory for creating proposals (Ownable)
+- `createProposal()` accepts `twapWindow_` parameter (passed to FutarchyProposalPoc constructor)
 - Auto-calls `treasury.authorizeProposal()` on creation
 - Maintains on-chain proposal registry (`proposals[id]`)
 

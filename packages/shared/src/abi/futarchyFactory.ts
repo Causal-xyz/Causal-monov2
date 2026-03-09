@@ -1,7 +1,10 @@
 export const futarchyFactoryAbi = [
   {
     type: "constructor",
-    inputs: [{ name: "owner_", type: "address" }],
+    inputs: [
+      { name: "owner_", type: "address" },
+      { name: "treasury_", type: "address" },
+    ],
     stateMutability: "nonpayable",
   },
   {
