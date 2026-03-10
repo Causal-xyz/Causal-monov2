@@ -79,6 +79,14 @@ export default function ProposalDetailPage({ params }: Props) {
         {/* Left column */}
         <div className="space-y-6">
           <MarketOverview proposal={proposal} onRefetch={refetch} />
+        </div>
+
+        {/* Right column */}
+        <div className="space-y-6">
+          <PortfolioPanel
+            proposalAddress={proposalAddress}
+            userAddress={userAddress}
+          />
 
           {!isResolved && (
             <SplitMergePanel
@@ -89,14 +97,6 @@ export default function ProposalDetailPage({ params }: Props) {
               onSuccess={refetch}
             />
           )}
-        </div>
-
-        {/* Right column */}
-        <div className="space-y-6">
-          <PortfolioPanel
-            proposalAddress={proposalAddress}
-            userAddress={userAddress}
-          />
 
           {canResolve && (
             <ResolutionPanel
