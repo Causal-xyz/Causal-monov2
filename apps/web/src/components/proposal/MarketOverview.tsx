@@ -85,76 +85,72 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
   const isResolved = proposal.outcome !== "Unresolved";
 
   return (
-    <Card className="glass-card rounded-xl border-border">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <TrendingUp className="h-5 w-5 text-causal" />
-          Market Overview
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Live prices */}
-        <PriceDisplay
+    <div className="space-y-4">
+      {/* Market Overview card — prices + trading */}
+      <Card className="glass-card rounded-xl border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-5 w-5 text-causal" />
+            Market Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <PriceDisplay
+            ammYesPair={proposal.ammYesPair}
+            ammNoPair={proposal.ammNoPair}
+            yesX={yesX}
+            noX={noX}
+            usdc={proposal.usdc}
+          />
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="text-xs text-muted-foreground">
+              <span className="text-causal">YES:</span>{" "}
+              <span className="font-mono">{proposal.ammYesPair.slice(0, 10)}...</span>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              <span className="text-destructive">NO:</span>{" "}
+              <span className="font-mono">{proposal.ammNoPair.slice(0, 10)}...</span>
+            </div>
+          </div>
+
+          {!isResolved && (
+            <TradingPanel
+              yesX={yesX}
+              noX={noX}
+              usdc={proposal.usdc}
+              ammYesPair={proposal.ammYesPair}
+              ammNoPair={proposal.ammNoPair}
+              userAddress={address}
+              onSuccess={onRefetch ?? (() => {})}
+            />
+          )}
+
+          {isResolved && (
+            <p className="text-center text-xs text-muted-foreground">
+              Market resolved — trading is closed.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Chart + Trades — full width, two independent panels */}
+      <div className="grid grid-cols-[1fr_380px] gap-4 items-start">
+        <ProposalChart
           ammYesPair={proposal.ammYesPair}
           ammNoPair={proposal.ammNoPair}
           yesX={yesX}
           noX={noX}
           usdc={proposal.usdc}
         />
-
-        {/* Pool addresses */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="text-xs text-muted-foreground">
-            <span className="text-causal">YES:</span>{" "}
-            <span className="font-mono">{proposal.ammYesPair.slice(0, 10)}...</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            <span className="text-destructive">NO:</span>{" "}
-            <span className="font-mono">{proposal.ammNoPair.slice(0, 10)}...</span>
-          </div>
-        </div>
-
-        {/* Trading panel — only when unresolved */}
-        {!isResolved && (
-          <TradingPanel
-            yesX={yesX}
-            noX={noX}
-            usdc={proposal.usdc}
-            ammYesPair={proposal.ammYesPair}
-            ammNoPair={proposal.ammNoPair}
-            userAddress={address}
-            onSuccess={onRefetch ?? (() => {})}
-          />
-        )}
-
-        {isResolved && (
-          <p className="text-center text-xs text-muted-foreground">
-            Market resolved — trading is closed.
-          </p>
-        )}
-
-        {/* Chart + Trades side by side */}
-        <div className="flex gap-4 items-stretch overflow-hidden">
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <ProposalChart
-              ammYesPair={proposal.ammYesPair}
-              ammNoPair={proposal.ammNoPair}
-              yesX={yesX}
-              noX={noX}
-              usdc={proposal.usdc}
-            />
-          </div>
-          <div className="w-[380px] shrink-0 flex flex-col">
-            <TradesTable
-              ammYesPair={proposal.ammYesPair}
-              ammNoPair={proposal.ammNoPair}
-              yesX={yesX}
-              noX={noX}
-              usdc={proposal.usdc}
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        <TradesTable
+          ammYesPair={proposal.ammYesPair}
+          ammNoPair={proposal.ammNoPair}
+          yesX={yesX}
+          noX={noX}
+          usdc={proposal.usdc}
+        />
+      </div>
+    </div>
   );
 }
