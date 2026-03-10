@@ -241,7 +241,7 @@ export function ProposalChart({
   const hasData = historyRef.current.length > 0 || (yesPool.price ?? 0) > 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3">
+    <div className="rounded-xl border border-border bg-card/60 p-4 space-y-3 overflow-hidden min-w-0">
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">
