@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { createPublicClient, http, parseAbiItem, formatUnits } from "viem";
 import { avalancheFuji } from "viem/chains";
+import { useBlockNumber } from "wagmi";
 
 const SWAP_EVENT = parseAbiItem(
   "event Swap(address indexed sender, address indexed recipient, int256 amount0, int256 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick)"
@@ -59,7 +60,7 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchTrades = useCallback(async () => {
     if (!yesX || !noX) return;
 
     const usdcLower = usdc.toLowerCase();
@@ -77,13 +78,12 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
       }
     }
 
-    async function fetchTrades() {
-      setLoading(true);
-      try {
-        const [yesMeta, noMeta] = await Promise.all([
-          fetchPoolMeta(ammYesPair),
-          fetchPoolMeta(ammNoPair),
-        ]);
+    setLoading(true);
+    try {
+      const [yesMeta, noMeta] = await Promise.all([
+        fetchPoolMeta(ammYesPair),
+        fetchPoolMeta(ammNoPair),
+      ]);
 
         const pools = [yesMeta, noMeta].filter(Boolean) as PoolMeta[];
         const latest = await client.getBlockNumber();
@@ -156,12 +156,17 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
       } finally {
         setLoading(false);
       }
-    }
-
-    fetchTrades();
-    const id = setInterval(fetchTrades, 30_000);
-    return () => clearInterval(id);
   }, [ammYesPair, ammNoPair, yesX, noX, usdc]);
+
+  useEffect(() => { fetchTrades(); }, [fetchTrades]);
+
+  const { data: blockNumber } = useBlockNumber({ watch: true });
+  const prevBlock = useRef<bigint>(0n);
+  useEffect(() => {
+    if (!blockNumber || blockNumber === prevBlock.current) return;
+    prevBlock.current = blockNumber;
+    fetchTrades();
+  }, [blockNumber, fetchTrades]);
 
   return (
     <div className="glass-card rounded-xl overflow-hidden flex flex-col h-full">
