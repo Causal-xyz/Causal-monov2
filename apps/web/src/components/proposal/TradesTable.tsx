@@ -163,7 +163,7 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
   }, [ammYesPair, ammNoPair, yesX, noX, usdc]);
 
   return (
-    <div className="rounded-xl border border-border bg-card/60 overflow-hidden flex flex-col h-full">
+    <div className="glass-card rounded-xl overflow-hidden flex flex-col h-full">
       <div className="px-4 py-3 border-b border-border shrink-0">
         <span className="text-sm font-medium">Trades</span>
       </div>
