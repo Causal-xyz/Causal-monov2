@@ -134,7 +134,7 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
         )}
 
         {/* Chart + Trades side by side */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-stretch">
           <div className="flex-1 min-w-0">
             <ProposalChart
               ammYesPair={proposal.ammYesPair}
@@ -144,7 +144,7 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
               usdc={proposal.usdc}
             />
           </div>
-          <div className="w-[380px] shrink-0">
+          <div className="w-[380px] shrink-0 flex flex-col">
             <TradesTable
               ammYesPair={proposal.ammYesPair}
               ammNoPair={proposal.ammNoPair}
