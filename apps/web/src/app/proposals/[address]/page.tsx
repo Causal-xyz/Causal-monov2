@@ -33,6 +33,16 @@ export default function ProposalDetailPage({ params }: Props) {
   const searchParams = useSearchParams();
   const fromId = searchParams.get("from");
 
+  const { data: tokenData } = useReadContracts({
+    contracts: [
+      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "yesX" },
+      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "noX" },
+    ],
+    query: { enabled: !!proposal?.hasAmms },
+  });
+  const yesX = tokenData?.[0]?.result as `0x${string}` | undefined;
+  const noX = tokenData?.[1]?.result as `0x${string}` | undefined;
+
   const { data: orgInfo } = useReadContract({
     address: CONTRACTS.causalOrganizations,
     abi: causalOrganizationsAbi,
@@ -59,16 +69,6 @@ export default function ProposalDetailPage({ params }: Props) {
   }
 
   const isResolved = proposal.outcome !== "Unresolved";
-
-  const { data: tokenData } = useReadContracts({
-    contracts: [
-      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "yesX" },
-      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "noX" },
-    ],
-    query: { enabled: proposal.hasAmms },
-  });
-  const yesX = tokenData?.[0]?.result as `0x${string}` | undefined;
-  const noX = tokenData?.[1]?.result as `0x${string}` | undefined;
   const canResolve =
     !isResolved && now >= proposal.resolutionTimestamp && proposal.hasAmms;
 
