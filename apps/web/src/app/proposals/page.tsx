@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Clock, CheckCircle, Building2, ExternalLink } from "lucide-react";
+import { Plus, Clock, CheckCircle, Building2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -15,12 +15,16 @@ type Filter = "all" | "Unresolved" | "Yes" | "No";
 export default function ProposalsPage() {
   const { proposals, count, isLoading } = useAllProposals();
   const [filter, setFilter] = useState<Filter>("all");
+  const [page, setPage] = useState(1);
   const router = useRouter();
+  const PAGE_SIZE = 10;
 
-  const filtered =
-    filter === "all"
-      ? proposals
-      : proposals.filter((p) => p.outcome === filter);
+  const filtered = (
+    filter === "all" ? proposals : proposals.filter((p) => p.outcome === filter)
+  ).slice().reverse();
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
@@ -46,7 +50,7 @@ export default function ProposalsPage() {
             key={f}
             variant={filter === f ? "default" : "outline"}
             size="sm"
-            onClick={() => setFilter(f)}
+            onClick={() => { setFilter(f); setPage(1); }}
           >
             {f === "all" ? "All" : f === "Unresolved" ? "Active" : `Resolved ${f}`}
           </Button>
@@ -66,7 +70,7 @@ export default function ProposalsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((proposal) => {
+          {paginated.map((proposal) => {
             const deadline = new Date(proposal.resolutionTimestamp * 1000);
             const isPast = deadline.getTime() < Date.now();
 
@@ -124,6 +128,38 @@ export default function ProposalsPage() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <Button
+              key={p}
+              variant={p === page ? "default" : "outline"}
+              size="sm"
+              className="w-9"
+              onClick={() => setPage(p)}
+            >
+              {p}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
     </div>

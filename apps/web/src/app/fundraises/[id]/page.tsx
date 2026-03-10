@@ -314,6 +314,29 @@ export default function FundraiseDetailPage({
 
         {/* ── Right Column ── */}
         <div className="space-y-4">
+          {/* Dashboard + Create Proposal buttons — finalized only */}
+          {status === "finalized" && (
+            <div className="flex gap-2">
+              <Link href={`/fundraises/${id}/dashboard`} className="flex-1">
+                <Button className="btn-glow w-full border-0 text-primary-foreground">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              {factoryAddress && (
+                <Link
+                  href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}`}
+                  className="flex-1"
+                >
+                  <Button variant="outline" className="w-full">
+                    Create Proposal
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+          )}
+
           {status === "funding" && (
             <ContributePanel
               orgId={orgId}
@@ -407,22 +430,6 @@ export default function FundraiseDetailPage({
                     <p className="text-xs text-muted-foreground">Proposal Factory</p>
                     <p className="mt-1 truncate font-mono text-xs">{factoryAddress}</p>
                   </div>
-                )}
-                <Link href={`/fundraises/${id}/dashboard`}>
-                  <Button className="btn-glow mt-2 w-full border-0 text-primary-foreground">
-                    Go to Dashboard
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                {factoryAddress && (
-                  <Link
-                    href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}`}
-                  >
-                    <Button variant="outline" className="mt-2 w-full">
-                      Create Proposal
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
                 )}
               </CardContent>
             </Card>
