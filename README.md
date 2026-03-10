@@ -112,13 +112,15 @@ CausalOrganizationsTreasuryFactoryProposalFactoryDeployerMockUSDC
 All contracts are verified on Snowtrace.
 
 Deployments
-| Program | Contract Addresses |
+| Program | Contract Address |
 |------|------|
-| **CausalOrganizations** |0xeD8bB8758d7231771279F4d24905E46B8febbAa1 |
-| **TreasuryFactory** | 0x6447E0E25488Ff7E5BC5f6270cc25Bd46189B134 |
-| **ProposalFactoryDeployer** | 0x0D9E90BB5BAA72b70fA6164d859048a9Fc57AB83 |
-| **MockUSDC** | 0x096731dc6CA1FF91702394F8c5C31dD989608e7B |
-Current Addresses Avalanche Fuji Testnet - Chain ID 43113
+| **CausalOrganizations** | 0xFF2f657C62Fa4167EFf334F7d48Ff2aA6C49Bc2B |
+| **MockTokenX** | 0xecFa95675aFF2F3776F53853Bb8da5a82015FB51 |
+| **MockUSDC** | 0xbeA10d851aD86B86a277aC046C24Eb989dfd027c |
+| **UniswapV3Factory** | 0x6739FCFDC0c6939939C0e8D55188E8D0D973E617 |
+| **PositionManager** | 0xD7144710B6152526FB33699B166B5917a73f67FE |
+| **SwapRouter** | 0x701067e5f83d71975988BE412Bbd922D806fd29D |
+Current Addresses Avalanche Fuji Testnet - Chain ID 43113 — deployed 2026-03-09
 
 Technology Stack
 Smart contracts: SolidityFramework: FoundryFrontend: Next.jsNetwork: AvalancheDependencies: OpenZeppelin
