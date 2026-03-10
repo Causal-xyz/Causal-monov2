@@ -8,8 +8,6 @@ import { PriceDisplay } from "@/components/proposal/PriceDisplay";
 import { TradingPanel } from "@/components/proposal/TradingPanel";
 import { futarchyProposalAbi } from "@causal/shared";
 import { TrendingUp, AlertCircle } from "lucide-react";
-import { ProposalChart } from "@/components/proposal/ProposalChart";
-import { TradesTable } from "@/components/proposal/TradesTable";
 
 interface MarketOverviewProps {
   readonly proposal: {
@@ -134,23 +132,6 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
         </CardContent>
       </Card>
 
-      {/* Chart + Trades — full width, two independent panels */}
-      <div className="grid grid-cols-[1fr_380px] gap-4 items-start">
-        <ProposalChart
-          ammYesPair={proposal.ammYesPair}
-          ammNoPair={proposal.ammNoPair}
-          yesX={yesX}
-          noX={noX}
-          usdc={proposal.usdc}
-        />
-        <TradesTable
-          ammYesPair={proposal.ammYesPair}
-          ammNoPair={proposal.ammNoPair}
-          yesX={yesX}
-          noX={noX}
-          usdc={proposal.usdc}
-        />
-      </div>
     </div>
   );
 }

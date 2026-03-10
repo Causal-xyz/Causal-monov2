@@ -3,8 +3,8 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useAccount, useReadContract } from "wagmi";
-import { causalOrganizationsAbi, CONTRACTS } from "@causal/shared";
+import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { causalOrganizationsAbi, futarchyProposalAbi, CONTRACTS } from "@causal/shared";
 import { useProposalInfo } from "@/hooks/useProposalInfo";
 import { ProposalHeader } from "@/components/proposal/ProposalHeader";
 import { SplitMergePanel } from "@/components/proposal/SplitMergePanel";
@@ -12,6 +12,8 @@ import { PortfolioPanel } from "@/components/proposal/PortfolioPanel";
 import { ResolutionPanel } from "@/components/proposal/ResolutionPanel";
 import { RedemptionPanel } from "@/components/proposal/RedemptionPanel";
 import { MarketOverview } from "@/components/proposal/MarketOverview";
+import { ProposalChart } from "@/components/proposal/ProposalChart";
+import { TradesTable } from "@/components/proposal/TradesTable";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 interface Props {
@@ -57,6 +59,16 @@ export default function ProposalDetailPage({ params }: Props) {
   }
 
   const isResolved = proposal.outcome !== "Unresolved";
+
+  const { data: tokenData } = useReadContracts({
+    contracts: [
+      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "yesX" },
+      { address: proposalAddress, abi: futarchyProposalAbi, functionName: "noX" },
+    ],
+    query: { enabled: proposal.hasAmms },
+  });
+  const yesX = tokenData?.[0]?.result as `0x${string}` | undefined;
+  const noX = tokenData?.[1]?.result as `0x${string}` | undefined;
   const canResolve =
     !isResolved && now >= proposal.resolutionTimestamp && proposal.hasAmms;
 
@@ -115,6 +127,26 @@ export default function ProposalDetailPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* Chart + Trades — full width below both columns */}
+      {proposal.hasAmms && (
+        <div className="mt-6 grid grid-cols-2 gap-4 items-start">
+          <ProposalChart
+            ammYesPair={proposal.ammYesPair}
+            ammNoPair={proposal.ammNoPair}
+            yesX={yesX}
+            noX={noX}
+            usdc={proposal.usdc}
+          />
+          <TradesTable
+            ammYesPair={proposal.ammYesPair}
+            ammNoPair={proposal.ammNoPair}
+            yesX={yesX}
+            noX={noX}
+            usdc={proposal.usdc}
+          />
+        </div>
+      )}
     </div>
   );
 }
