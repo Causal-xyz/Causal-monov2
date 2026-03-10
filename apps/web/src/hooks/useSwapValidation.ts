@@ -135,7 +135,7 @@ const UNISWAP_ERROR_MAP: Record<string, string> = {
   M1: "Insufficient token1 minted",
   F0: "Fees owed on token0 must be positive",
   F1: "Fees owed on token1 must be positive",
-  T: "Tick out of range",
+  T: "Insufficient pool liquidity — try a smaller amount",
   R: "sqrtPriceX96 out of range",
 };
 

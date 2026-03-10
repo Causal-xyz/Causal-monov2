@@ -332,6 +332,19 @@ export function TradingPanel({
         </div>
       )}
 
+      {/* Pool depth warning */}
+      {parsedAmount > 0n && estimatedAmount > 0n && pool.liquidity && pool.sqrtPriceX96 && conditionalToken && (() => {
+        const maxOut = estimateMaxPoolOutput(pool.liquidity, pool.sqrtPriceX96, direction, conditionalToken, usdc, tokenOutDecimals);
+        return maxOut > 0n && estimatedAmount > maxOut ? (
+          <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-2">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-400" />
+            <span className="text-xs text-yellow-400">
+              Amount exceeds pool depth (~{formatBigint(maxOut, tokenOutDecimals)} {direction === "buy" ? marketLabel : "USDC"} available). Reduce your amount.
+            </span>
+          </div>
+        ) : null;
+      })()}
+
       {/* Validation warning */}
       {validation.error && (
         <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-2">
@@ -457,6 +470,34 @@ function estimateSwapResult(
   // Need to pay more to cover the fee
   const estimated = afterFee > 0 ? rawEstimate / afterFee : rawEstimate;
   return parseUnits(estimated.toFixed(tokenInDecimals), tokenInDecimals);
+}
+
+/** Estimate max output available from pool depth using L and sqrtPriceX96 */
+function estimateMaxPoolOutput(
+  liquidity: bigint,
+  sqrtPriceX96: bigint,
+  direction: Direction,
+  conditionalToken: `0x${string}`,
+  usdcToken: `0x${string}`,
+  tokenOutDecimals: number,
+): bigint {
+  const Q96 = 2n ** 96n;
+  const conditionalIsToken0 = conditionalToken.toLowerCase() < usdcToken.toLowerCase();
+  // buying conditional: pool provides token0 (if conditionalIsToken0) or token1
+  // selling conditional: pool provides USDC = the other token
+  const providingToken0 =
+    (direction === "buy" && conditionalIsToken0) ||
+    (direction === "sell" && !conditionalIsToken0);
+
+  try {
+    const raw = providingToken0
+      ? (liquidity * Q96) / sqrtPriceX96
+      : (liquidity * sqrtPriceX96) / Q96;
+    // sanity check: if out decimals are 18, raw is in token0 units already
+    return raw;
+  } catch {
+    return 0n;
+  }
 }
 
 /** Apply slippage tolerance to an estimated amount */
