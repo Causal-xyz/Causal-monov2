@@ -12,6 +12,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import { usePoolPrice } from "@/hooks/usePoolPrice";
+import { BarChart2 } from "lucide-react";
 
 interface PricePoint {
   time: UTCTimestamp;
@@ -242,6 +243,12 @@ export function ProposalChart({
 
   return (
     <div className="glass-card rounded-xl p-4 space-y-3 overflow-hidden min-w-0">
+      {/* Title */}
+      <div className="flex items-center gap-2 pb-1 border-b border-border">
+        <BarChart2 className="h-5 w-5 text-causal" />
+        <span className="text-lg font-semibold">Price Chart</span>
+      </div>
+
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">

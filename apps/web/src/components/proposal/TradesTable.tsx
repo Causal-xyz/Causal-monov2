@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ArrowLeftRight } from "lucide-react";
 import { createPublicClient, http, parseAbiItem, formatUnits } from "viem";
 import { avalancheFuji } from "viem/chains";
 
@@ -164,8 +165,9 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
 
   return (
     <div className="glass-card rounded-xl overflow-hidden flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-border shrink-0">
-        <span className="text-sm font-medium">Trades</span>
+      <div className="px-4 py-3 border-b border-border shrink-0 flex items-center gap-2">
+        <ArrowLeftRight className="h-5 w-5 text-causal" />
+        <span className="text-lg font-semibold">Trades</span>
       </div>
       <div className="overflow-auto flex-1">
         <table className="w-full text-xs">
