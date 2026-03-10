@@ -109,22 +109,6 @@ export default function ProposalDetailPage({ params }: Props) {
               onSuccess={refetch}
             />
           )}
-
-          {canResolve && (
-            <ResolutionPanel
-              proposalAddress={proposalAddress}
-              onSuccess={refetch}
-            />
-          )}
-
-          {isResolved && (
-            <RedemptionPanel
-              proposalAddress={proposalAddress}
-              outcome={proposal.outcome}
-              userAddress={userAddress}
-              onSuccess={refetch}
-            />
-          )}
         </div>
       </div>
 
@@ -138,13 +122,29 @@ export default function ProposalDetailPage({ params }: Props) {
             noX={noX}
             usdc={proposal.usdc}
           />
-          <TradesTable
-            ammYesPair={proposal.ammYesPair}
-            ammNoPair={proposal.ammNoPair}
-            yesX={yesX}
-            noX={noX}
-            usdc={proposal.usdc}
-          />
+          <div className="space-y-4">
+            <TradesTable
+              ammYesPair={proposal.ammYesPair}
+              ammNoPair={proposal.ammNoPair}
+              yesX={yesX}
+              noX={noX}
+              usdc={proposal.usdc}
+            />
+            {canResolve && (
+              <ResolutionPanel
+                proposalAddress={proposalAddress}
+                onSuccess={refetch}
+              />
+            )}
+            {isResolved && (
+              <RedemptionPanel
+                proposalAddress={proposalAddress}
+                outcome={proposal.outcome}
+                userAddress={userAddress}
+                onSuccess={refetch}
+              />
+            )}
+          </div>
         </div>
       )}
     </div>
