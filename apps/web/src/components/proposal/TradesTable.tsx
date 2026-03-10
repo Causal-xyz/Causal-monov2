@@ -33,6 +33,7 @@ interface TradesTableProps {
   readonly yesX: `0x${string}` | undefined;
   readonly noX: `0x${string}` | undefined;
   readonly usdc: `0x${string}`;
+  readonly isResolved?: boolean;
 }
 
 const client = createPublicClient({
@@ -56,7 +57,7 @@ function sqrtPriceToPrice(sqrtPriceX96: bigint, token0IsUsdc: boolean): number {
   }
 }
 
-export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTableProps) {
+export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc, isResolved }: TradesTableProps) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -160,13 +161,13 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
 
   useEffect(() => { fetchTrades(); }, [fetchTrades]);
 
-  const { data: blockNumber } = useBlockNumber({ watch: true });
+  const { data: blockNumber } = useBlockNumber({ watch: !isResolved });
   const prevBlock = useRef<bigint>(0n);
   useEffect(() => {
-    if (!blockNumber || blockNumber === prevBlock.current) return;
+    if (isResolved || !blockNumber || blockNumber === prevBlock.current) return;
     prevBlock.current = blockNumber;
     fetchTrades();
-  }, [blockNumber, fetchTrades]);
+  }, [blockNumber, fetchTrades, isResolved]);
 
   return (
     <div className="glass-card rounded-xl overflow-hidden flex flex-col h-full">
@@ -186,10 +187,10 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
             </tr>
           </thead>
           <tbody>
-            {loading && (
+            {loading && trades.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted-foreground">
-                  Loading trades…
+                <td colSpan={5} className="px-4 py-2 text-center text-muted-foreground text-sm">
+                  Loading…
                 </td>
               </tr>
             )}

@@ -129,6 +129,7 @@ export default function ProposalDetailPage({ params }: Props) {
               yesX={yesX}
               noX={noX}
               usdc={proposal.usdc}
+              isResolved={isResolved}
             />
             {canResolve && (
               <ResolutionPanel
