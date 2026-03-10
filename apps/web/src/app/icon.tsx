@@ -8,7 +8,8 @@ export default async function Icon() {
   try {
     const { blobs } = await list({ prefix: "org-logos.json" });
     if (blobs.length > 0) {
-      const res = await fetch(blobs[0].url);
+      const latest = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+      const res = await fetch(latest.url);
       const logos: Record<string, string> = await res.json();
       const logoUrl = logos["9"];
 
