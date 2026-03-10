@@ -30,7 +30,7 @@ export function useProposalInfo(proposalAddress: `0x${string}` | undefined) {
       { ...contract, functionName: "ammNoPair" },
       { ...contract, functionName: "owner" },
     ],
-    query: { enabled: !!proposalAddress },
+    query: { enabled: !!proposalAddress, staleTime: 30_000 },
   });
 
   if (!data) {

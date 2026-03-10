@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAccount, useReadContract } from "wagmi";
@@ -23,6 +23,11 @@ export default function ProposalDetailPage({ params }: Props) {
   const proposalAddress = rawAddress as `0x${string}`;
   const { address: userAddress } = useAccount();
   const { proposal, isLoading, refetch } = useProposalInfo(proposalAddress);
+  const [now, setNow] = useState(() => Date.now() / 1000);
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now() / 1000), 5000);
+    return () => clearInterval(id);
+  }, []);
   const searchParams = useSearchParams();
   const fromId = searchParams.get("from");
 
@@ -53,7 +58,7 @@ export default function ProposalDetailPage({ params }: Props) {
 
   const isResolved = proposal.outcome !== "Unresolved";
   const canResolve =
-    !isResolved && Date.now() / 1000 >= proposal.resolutionTimestamp && proposal.hasAmms;
+    !isResolved && now >= proposal.resolutionTimestamp && proposal.hasAmms;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
