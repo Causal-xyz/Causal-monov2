@@ -15,7 +15,9 @@ export function FundraiseProgress({
 }: FundraiseProgressProps) {
   const raisedNum = parseFloat(formatUnits(raised, decimals));
   const goalNum = parseFloat(formatUnits(goal, decimals));
-  const pct = goalNum > 0 ? Math.min((raisedNum / goalNum) * 100, 100) : 0;
+  const realPct = goalNum > 0 ? (raisedNum / goalNum) * 100 : 0;
+  const barPct = Math.min(realPct, 100);
+  const overFunded = realPct > 100;
 
   return (
     <div className="space-y-2">
@@ -32,11 +34,11 @@ export function FundraiseProgress({
       <div className="h-2 w-full overflow-hidden rounded-full bg-border">
         <div
           className="h-full rounded-full bg-gradient-to-r from-causal to-causal-dark transition-all duration-500"
-          style={{ width: `${pct}%` }}
+          style={{ width: `${barPct}%` }}
         />
       </div>
-      <p className="text-right text-xs text-muted-foreground">
-        {pct.toFixed(1)}% funded
+      <p className={`text-right text-xs font-medium ${overFunded ? "text-green-400" : "text-causal"}`}>
+        {realPct.toFixed(1)}% funded
       </p>
     </div>
   );
