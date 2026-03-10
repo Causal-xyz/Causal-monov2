@@ -325,7 +325,7 @@ export default function FundraiseDetailPage({
               </Link>
               {factoryAddress && (
                 <Link
-                  href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}`}
+                  href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}&from=${id}`}
                   className="flex-1"
                 >
                   <Button variant="outline" className="w-full">

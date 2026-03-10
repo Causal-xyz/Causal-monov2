@@ -10,7 +10,8 @@ import { CONTRACTS } from "@causal/shared";
 import { useCreateProposal } from "@/hooks/useCreateProposal";
 import { useLatestProposalAddress } from "@/hooks/useLatestProposalAddress";
 import { useTransactionToast } from "@/hooks/useTransactionToast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 interface FormState {
   readonly title: string;
@@ -157,10 +158,22 @@ function CreateProposalContent() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <h1 className="mb-2 text-3xl font-bold">Create Proposal</h1>
-      <p className="mb-8 text-muted-foreground">
-        Define a governance action and let the market decide its outcome.
-      </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="mb-1 text-3xl font-bold">Create Proposal</h1>
+          <p className="text-muted-foreground">
+            Define a governance action and let the market decide its outcome.
+          </p>
+        </div>
+        {fromOrgId && (
+          <Link href={`/fundraises/${fromOrgId}/dashboard`}>
+            <Button className="btn-glow border-0 text-primary-foreground shrink-0">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Go to Dashboard
+            </Button>
+          </Link>
+        )}
+      </div>
 
       {!hasValidFactory && (
         <div className="mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-400">
