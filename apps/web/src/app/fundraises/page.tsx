@@ -74,7 +74,7 @@ export default function FundraisesPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {filtered.map((org) => {
+          {[...filtered].reverse().map((org) => {
             const deadline = new Date(org.saleEnd * 1000);
             const isPast = deadline.getTime() < Date.now();
 

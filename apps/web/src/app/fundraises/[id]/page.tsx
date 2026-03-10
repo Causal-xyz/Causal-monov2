@@ -310,53 +310,6 @@ export default function FundraiseDetailPage({
             </Card>
           )}
 
-          {/* Governance — finalized only */}
-          {status === "finalized" && (
-            <Card className="glass-card rounded-2xl border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Landmark className="h-4 w-4 text-causal" />
-                  Governance Infrastructure
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {tokenAddress && (
-                  <div className="rounded-xl bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground">OrgToken ({info.symbol})</p>
-                    <p className="mt-1 truncate font-mono text-xs">{tokenAddress}</p>
-                  </div>
-                )}
-                {treasuryAddress && (
-                  <div className="rounded-xl bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground">Treasury</p>
-                    <p className="mt-1 truncate font-mono text-xs">{treasuryAddress}</p>
-                  </div>
-                )}
-                {factoryAddress && (
-                  <div className="rounded-xl bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground">Proposal Factory</p>
-                    <p className="mt-1 truncate font-mono text-xs">{factoryAddress}</p>
-                  </div>
-                )}
-                <Link href={`/fundraises/${id}/dashboard`}>
-                  <Button className="btn-glow mt-2 w-full border-0 text-primary-foreground">
-                    Go to Dashboard
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-                {factoryAddress && (
-                  <Link
-                    href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}`}
-                  >
-                    <Button variant="outline" className="mt-2 w-full">
-                      Create Proposal
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                )}
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* ── Right Column ── */}
@@ -426,6 +379,54 @@ export default function FundraiseDetailPage({
               Founder: {info.founder}
             </p>
           </div>
+
+          {/* Governance — finalized only */}
+          {status === "finalized" && (
+            <Card className="glass-card rounded-2xl border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Landmark className="h-4 w-4 text-causal" />
+                  Governance Infrastructure
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {tokenAddress && (
+                  <div className="rounded-xl bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">OrgToken ({info.symbol})</p>
+                    <p className="mt-1 truncate font-mono text-xs">{tokenAddress}</p>
+                  </div>
+                )}
+                {treasuryAddress && (
+                  <div className="rounded-xl bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">Treasury</p>
+                    <p className="mt-1 truncate font-mono text-xs">{treasuryAddress}</p>
+                  </div>
+                )}
+                {factoryAddress && (
+                  <div className="rounded-xl bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">Proposal Factory</p>
+                    <p className="mt-1 truncate font-mono text-xs">{factoryAddress}</p>
+                  </div>
+                )}
+                <Link href={`/fundraises/${id}/dashboard`}>
+                  <Button className="btn-glow mt-2 w-full border-0 text-primary-foreground">
+                    Go to Dashboard
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                {factoryAddress && (
+                  <Link
+                    href={`/proposals/create?factory=${factoryAddress}${tokenAddress ? `&tokenX=${tokenAddress}` : ""}${treasuryAddress ? `&treasury=${treasuryAddress}` : ""}`}
+                  >
+                    <Button variant="outline" className="mt-2 w-full">
+                      Create Proposal
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
       </div>
