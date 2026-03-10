@@ -114,13 +114,14 @@ All contracts are verified on Snowtrace.
 Deployments
 | Program | Contract Address |
 |------|------|
-| **CausalOrganizations** | 0xFF2f657C62Fa4167EFf334F7d48Ff2aA6C49Bc2B |
-| **MockTokenX** | 0xecFa95675aFF2F3776F53853Bb8da5a82015FB51 |
-| **MockUSDC** | 0xbeA10d851aD86B86a277aC046C24Eb989dfd027c |
+| **CausalOrganizations** | 0xCbFd2C9F46AC9881c145FE11322875d69285c10b |
+| **OrgDeployer** | 0x4B7b5D3a8c9e43bFD950eE0de7ccEA60C711564D |
+| **MockTokenX** | 0x2AD400c1E8A367Cb77721C9d14Df32F4Adf44212 |
+| **MockUSDC** | 0xDf7790C77269Af7FbBe39e30b554b209bA3f22Db |
 | **UniswapV3Factory** | 0x6739FCFDC0c6939939C0e8D55188E8D0D973E617 |
 | **PositionManager** | 0xD7144710B6152526FB33699B166B5917a73f67FE |
 | **SwapRouter** | 0x701067e5f83d71975988BE412Bbd922D806fd29D |
-Current Addresses Avalanche Fuji Testnet - Chain ID 43113 — deployed 2026-03-09
+Current Addresses Avalanche Fuji Testnet - Chain ID 43113 — deployed 2026-03-10
 
 Technology Stack
 Smart contracts: SolidityFramework: FoundryFrontend: Next.jsNetwork: AvalancheDependencies: OpenZeppelin
