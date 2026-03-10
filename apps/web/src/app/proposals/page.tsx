@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Clock, CheckCircle, Building2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Clock, CheckCircle, Building2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -28,19 +28,11 @@ export default function ProposalsPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Proposals</h1>
-          <p className="mt-1 text-muted-foreground">
-            {count} proposal{count !== 1 ? "s" : ""} total
-          </p>
-        </div>
-        <Link href="/proposals/create">
-          <Button className="btn-glow border-0 text-primary-foreground">
-            <Plus className="mr-2 h-4 w-4" />
-            Create
-          </Button>
-        </Link>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Proposals</h1>
+        <p className="mt-1 text-muted-foreground">
+          {count} proposal{count !== 1 ? "s" : ""} total
+        </p>
       </div>
 
       {/* Filters */}
