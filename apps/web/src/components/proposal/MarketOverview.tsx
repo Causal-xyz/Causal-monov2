@@ -133,22 +133,27 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
           </p>
         )}
 
-        {/* Price chart */}
-        <ProposalChart
-          ammYesPair={proposal.ammYesPair}
-          ammNoPair={proposal.ammNoPair}
-          yesX={yesX}
-          noX={noX}
-          usdc={proposal.usdc}
-        />
-
-        <TradesTable
-          ammYesPair={proposal.ammYesPair}
-          ammNoPair={proposal.ammNoPair}
-          yesX={yesX}
-          noX={noX}
-          usdc={proposal.usdc}
-        />
+        {/* Chart + Trades side by side */}
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0">
+            <ProposalChart
+              ammYesPair={proposal.ammYesPair}
+              ammNoPair={proposal.ammNoPair}
+              yesX={yesX}
+              noX={noX}
+              usdc={proposal.usdc}
+            />
+          </div>
+          <div className="w-[380px] shrink-0">
+            <TradesTable
+              ammYesPair={proposal.ammYesPair}
+              ammNoPair={proposal.ammNoPair}
+              yesX={yesX}
+              noX={noX}
+              usdc={proposal.usdc}
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

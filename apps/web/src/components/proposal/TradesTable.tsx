@@ -86,7 +86,7 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
 
         const pools = [yesMeta, noMeta].filter(Boolean) as PoolMeta[];
         const latest = await client.getBlockNumber();
-        const fromBlock = latest > 50000n ? latest - 50000n : 0n;
+        const fromBlock = latest > 2000n ? latest - 2000n : 0n;
 
         const allLogs = await Promise.all(
           pools.map((pool) =>
