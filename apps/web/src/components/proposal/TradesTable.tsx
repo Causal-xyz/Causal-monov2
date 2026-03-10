@@ -218,9 +218,10 @@ export function TradesTable({ ammYesPair, ammNoPair, yesX, noX, usdc }: TradesTa
                 </td>
                 <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">
                   {t.timestamp
-                    ? new Date(t.timestamp * 1000).toLocaleString(undefined, {
-                        month: "short", day: "numeric",
+                    ? new Date(t.timestamp * 1000).toLocaleString("en-US", {
+                        month: "short", day: "numeric", year: "numeric",
                         hour: "2-digit", minute: "2-digit", second: "2-digit",
+                        hour12: true,
                       })
                     : "—"}
                 </td>
