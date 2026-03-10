@@ -5,7 +5,8 @@ async function readStore(): Promise<Record<string, string>> {
   try {
     const { blobs } = await list({ prefix: "org-logos.json" });
     if (blobs.length === 0) return {};
-    const res = await fetch(blobs[0].url);
+    const latest = blobs.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())[0];
+    const res = await fetch(latest.url);
     return await res.json();
   } catch {
     return {};
@@ -17,6 +18,7 @@ async function writeStore(store: Record<string, string>) {
     access: "public",
     contentType: "application/json",
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 
