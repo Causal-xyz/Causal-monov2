@@ -9,6 +9,7 @@ import { TradingPanel } from "@/components/proposal/TradingPanel";
 import { futarchyProposalAbi } from "@causal/shared";
 import { TrendingUp, AlertCircle } from "lucide-react";
 import { ProposalChart } from "@/components/proposal/ProposalChart";
+import { TradesTable } from "@/components/proposal/TradesTable";
 
 interface MarketOverviewProps {
   readonly proposal: {
@@ -134,6 +135,14 @@ export function MarketOverview({ proposal, onRefetch }: MarketOverviewProps) {
 
         {/* Price chart */}
         <ProposalChart
+          ammYesPair={proposal.ammYesPair}
+          ammNoPair={proposal.ammNoPair}
+          yesX={yesX}
+          noX={noX}
+          usdc={proposal.usdc}
+        />
+
+        <TradesTable
           ammYesPair={proposal.ammYesPair}
           ammNoPair={proposal.ammNoPair}
           yesX={yesX}
