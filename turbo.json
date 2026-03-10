@@ -4,8 +4,8 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [
-        ".next/**",
-        "!**/.next/cache/**",
+        "apps/web/.next/**",
+        "!apps/web/.next/cache/**",
         "dist/**",
         "out/**",
         "public/**"
