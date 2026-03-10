@@ -1,35 +1,35 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import path from "path";
+import { list } from "@vercel/blob";
 
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
 export default async function Icon({ params }: { params: { id: string } }) {
   try {
-    const logosPath = path.join(process.cwd(), "data", "org-logos.json");
-    const logos: Record<string, string> = JSON.parse(
-      await readFile(logosPath, "utf-8")
-    );
-    const logoRelPath = logos[params.id];
+    const { blobs } = await list({ prefix: "org-logos.json" });
+    if (blobs.length > 0) {
+      const res = await fetch(blobs[0].url);
+      const logos: Record<string, string> = await res.json();
+      const logoUrl = logos[params.id];
 
-    if (logoRelPath) {
-      const filePath = path.join(process.cwd(), "public", logoRelPath);
-      const imgData = await readFile(filePath);
-      const base64 = imgData.toString("base64");
-      const mimeType = logoRelPath.endsWith(".png") ? "image/png" : "image/jpeg";
+      if (logoUrl) {
+        const imgRes = await fetch(logoUrl);
+        const imgData = await imgRes.arrayBuffer();
+        const base64 = Buffer.from(imgData).toString("base64");
+        const mimeType = logoUrl.includes(".png") ? "image/png" : "image/jpeg";
 
-      return new ImageResponse(
-        (
-          <img
-            src={`data:${mimeType};base64,${base64}`}
-            width={32}
-            height={32}
-            style={{ borderRadius: 8, objectFit: "cover" }}
-          />
-        ),
-        { ...size }
-      );
+        return new ImageResponse(
+          (
+            <img
+              src={`data:${mimeType};base64,${base64}`}
+              width={32}
+              height={32}
+              style={{ borderRadius: 8, objectFit: "cover" }}
+            />
+          ),
+          { ...size }
+        );
+      }
     }
   } catch {}
 

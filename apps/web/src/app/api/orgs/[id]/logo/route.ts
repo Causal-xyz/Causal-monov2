@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile, writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-
-const DATA_DIR = join(process.cwd(), "data");
-const STORE_PATH = join(DATA_DIR, "org-logos.json");
+import { list, put } from "@vercel/blob";
 
 async function readStore(): Promise<Record<string, string>> {
   try {
-    const raw = await readFile(STORE_PATH, "utf-8");
-    return JSON.parse(raw);
+    const { blobs } = await list({ prefix: "org-logos.json" });
+    if (blobs.length === 0) return {};
+    const res = await fetch(blobs[0].url);
+    return await res.json();
   } catch {
     return {};
   }
 }
 
 async function writeStore(store: Record<string, string>) {
-  await mkdir(DATA_DIR, { recursive: true });
-  await writeFile(STORE_PATH, JSON.stringify(store, null, 2));
+  await put("org-logos.json", JSON.stringify(store), {
+    access: "public",
+    contentType: "application/json",
+    addRandomSuffix: false,
+  });
 }
 
 export async function GET(

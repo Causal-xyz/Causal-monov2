@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
-import { readFile } from "fs/promises";
-import { join } from "path";
+import { list } from "@vercel/blob";
 
-const STORE_PATH = join(process.cwd(), "data", "org-logos.json");
+async function readStore(): Promise<Record<string, string>> {
+  try {
+    const { blobs } = await list({ prefix: "org-logos.json" });
+    if (blobs.length === 0) return {};
+    const res = await fetch(blobs[0].url);
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
 
 export async function GET() {
-  try {
-    const raw = await readFile(STORE_PATH, "utf-8");
-    return NextResponse.json(JSON.parse(raw));
-  } catch {
-    return NextResponse.json({});
-  }
+  return NextResponse.json(await readStore());
 }
